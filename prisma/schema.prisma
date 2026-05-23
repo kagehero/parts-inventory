@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Auth ----
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String?
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ---- Master data ----
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  municipality String
+  machines     Machine[]
+  usages       UsageHistory[]
+  createdAt    DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([municipality])
+  @@map("customers")
+}
+
+model Machine {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  modelName  String
+  unitNo     String
+  engineNo        String?
+  usages          UsageHistory[]
+  repairHistories RepairHistory[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([modelName])
+  @@index([unitNo])
+  @@index([engineNo])
+  @@unique([customerId, modelName, unitNo])
+  @@map("machines")
+}
+
+/// 発注先マスタ（注文ヘッダで選択して転記）
+model Supplier {
+  id          String   @id @default(cuid())
+  companyName String
+  attn        String?
+  fax         String?
+  phone       String?
+  email       String?
+  memo        String?
+  orders      Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyName])
+  @@map("suppliers")
+}
+
+/// Set when the row was created for free-text outbound (no prior master); may carry negative `currentQty`.
+model Part {
+  id               String             @id @default(cuid())
+  name             String
+  oemPartNo        String?
+  aftermarketNo    String?
+  oemListPrice     Decimal?           @db.Decimal(12, 2)
+  purchasePrice    Decimal?           @db.Decimal(12, 2)
+  salePrice        Decimal?           @db.Decimal(12, 2)
+  compatibleModels String?
+  markupRate       Decimal?           @db.Decimal(6, 4)
+  /// Cached sum of `inventory_logs.quantity`; updated only with receipt & usage transactions — not edited on the part form.
+  currentQty       Int                @default(0)
+  isAdHoc          Boolean            @default(false)
+
+  orderLines        OrderLine[]
+  usageLines        UsageHistoryLine[]
+  inventoryLogs     InventoryLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([oemPartNo])
+  @@index([aftermarketNo])
+  @@index([compatibleModels])
+  @@map("parts")
+}
+
+// ---- Purchase orders ----
+
+enum OrderStatus {
+  OPEN
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum OrderDocumentType {
+  PURCHASE_ORDER
+  QUOTE_REQUEST
+}
+
+enum OrderLineSource {
+  MASTER
+  FREE_TEXT
+}
+
+enum OrderLineStatus {
+  ORDERED
+  PARTIALLY_RECEIVED
+  RECEIVED
+}
+
+enum FileStorageKind {
+  LOCAL
+  BLOB
+}
+
+enum OrderLinePrintPartNoMode {
+  AUTO_AFTERMARKET
+  AUTO_OEM
+  NONE
+  CUSTOM
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  supplierId   String?
+  supplier     Supplier?   @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierName String?
+  supplierFax  String?
+  /// 印刷用敬称（御中／様など）。空なら付けない。
+  supplierHonorific String?
+  memo         String?
+  /// 印刷下部コメント欄（全体特記・返信メモ等）
+  printComment String?
+  status       OrderStatus @default(OPEN)
+  orderDate    DateTime    @default(now())
+  documentType OrderDocumentType @default(PURCHASE_ORDER)
+  /// 発注元（自社）担当者 — 必須
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  /// 発注先側担当者 — 任意（印刷用）
+  supplierContactName String?
+  /// Supplier quote response — amount
+  quoteReplyAmount   Decimal?    @db.Decimal(12, 2)
+  /// Supplier quote response — lead time / 納期 (free text)
+  quoteReplyLeadTime String?
+
+  lines       OrderLine[]
+  attachments OrderAttachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderDate])
+  @@index([status])
+  @@index([supplierName])
+  @@index([documentType])
+  @@index([supplierId])
+  @@map("orders")
+}
+
+model OrderLine {
+  id           String       @id @default(cuid())
+  orderId      String
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// Set when `lineSource` is MASTER; null for FREE_TEXT rows (documentation / 注文書のみ).
+  partId       String?
+  part         Part?         @relation(fields: [partId], references: [id], onDelete: SetNull)
+  lineSource   OrderLineSource @default(MASTER)
+  freeItemName     String?
+  freePartNo       String?
+  machineModel     String?
+  machineUnitNo    String?
+  machineEngineNo  String?
+  lineNote         String?
+  /// 印刷：品名右の詳細（機体・型式・長文など）
+  lineDetail       String?
+  /// 印刷：仕切単価右のお客様名
+  endCustomerName  String?
+  /// 印刷用品番の出し方（マスタ行）
+  printPartNoMode     OrderLinePrintPartNoMode @default(AUTO_AFTERMARKET)
+  /// CUSTOM 時の上書き品番
+  printPartNoOverride String?
+  orderedQty   Int
+  receivedQty  Int           @default(0)
+  unitCost     Decimal?      @db.Decimal(12, 2)
+  lineStatus   OrderLineStatus @default(ORDERED)
+
+  inventoryLogs InventoryLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([partId])
+  @@map("order_lines")
+}
+
+model OrderAttachment {
+  id           String          @id @default(cuid())
+  orderId      String
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fileName     String
+  mimeType     String
+  fileSize     Int
+  storageKind  FileStorageKind @default(LOCAL)
+  /// Browser-openable URL (public blob) or app path `/api/order-attachments/.../file`
+  fileUrl      String
+  /// LOCAL: relative key under uploads; BLOB: full URL for `del()`
+  storageRef   String
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_attachments")
+}
+
+// ---- Stock ledger ----
+
+enum InventoryLogType {
+  PURCHASE_IN
+  USAGE_OUT
+  ADJUSTMENT
+}
+
+model InventoryLog {
+  /// Append-only stock movement (app does not update/delete rows in normal flows).
+  id           String           @id @default(cuid())
+  partId       String
+  part         Part              @relation(fields: [partId], references: [id], onDelete: Restrict)
+  logType      InventoryLogType
+  quantity     Int
+  occurredAt   DateTime         @default(now())
+  orderLineId  String?
+  orderLine    OrderLine?       @relation(fields: [orderLineId], references: [id])
+  usageLineId  String?          @unique
+  usageHistoryLine UsageHistoryLine? @relation(fields: [usageLineId], references: [id])
+  note         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partId])
+  @@index([occurredAt])
+  @@index([logType])
+  @@index([orderLineId])
+  @@map("inventory_logs")
+}
+
+// ---- Usage (outbound) slips ----
+
+model UsageHistory {
+  id         String   @id @default(cuid())
+  issueDate  DateTime @default(now())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  machineId  String?
+  machine    Machine?   @relation(fields: [machineId], references: [id])
+  memo       String?
+
+  lines UsageHistoryLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([issueDate])
+  @@index([customerId])
+  @@index([machineId])
+  @@map("usage_histories")
+}
+
+model UsageHistoryLine {
+  id              String       @id @default(cuid())
+  usageHistoryId  String
+  usageHistory    UsageHistory @relation(fields: [usageHistoryId], references: [id], onDelete: Cascade)
+  partId          String
+  part            Part           @relation(fields: [partId], references: [id])
+  quantity        Int
+
+  inventoryLog InventoryLog?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([usageHistoryId])
+  @@index([partId])
+  @@map("usage_history_lines")
+}
+
+// ---- Repairs ----
+
+model RepairHistory {
+  id             String          @id @default(cuid())
+  title          String
+  repairDate     DateTime        @default(now())
+  pdfUrl         String          @default("")
+  /// LOCAL: filename under UPLOAD_DIR; BLOB: full blob URL (used with `del`)
+  storedFileKey  String
+  fileName       String
+  mimeType       String          @default("application/pdf")
+  fileSize       Int
+  storageKind    FileStorageKind @default(LOCAL)
+  machineId      String?
+  machine        Machine?        @relation(fields: [machineId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([repairDate])
+  @@index([title])
+  @@index([storedFileKey])
+  @@index([machineId])
+  @@map("repair_histories")
+}

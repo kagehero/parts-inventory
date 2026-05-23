@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Japanese minimal — indigo primary, slate neutrals */
+@layer base {
+  :root {
+    --background: 215 28% 97%;
+    --foreground: 222 41% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 41% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 41% 12%;
+    --primary: 239 48% 48%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 215 22% 93%;
+    --secondary-foreground: 222 32% 18%;
+    --muted: 216 24% 94%;
+    --muted-foreground: 215 16% 43%;
+    --accent: 239 62% 55%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 350 70% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 216 17% 88%;
+    --input: 216 17% 88%;
+    --ring: 239 48% 48%;
+    --radius: 0.5625rem;
+  }
+
+  .dark {
+    --background: 222 38% 8%;
+    --foreground: 213 31% 96%;
+    --card: 223 34% 12%;
+    --card-foreground: 213 31% 96%;
+    --popover: 223 34% 12%;
+    --popover-foreground: 213 31% 96%;
+    --primary: 234 76% 70%;
+    --primary-foreground: 224 71% 6%;
+    --secondary: 217 26% 16%;
+    --secondary-foreground: 213 31% 96%;
+    --muted: 217 22% 16%;
+    --muted-foreground: 215 17% 70%;
+    --accent: 239 62% 60%;
+    --accent-foreground: 213 31% 98%;
+    --destructive: 350 62% 45%;
+    --destructive-foreground: 213 31% 98%;
+    --border: 217 22% 20%;
+    --input: 217 22% 20%;
+    --ring: 234 76% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* ── 注文書 FAX 印刷（A4 横向き） ── */
+@page {
+  size: A4 landscape;
+  margin: 8mm 10mm;
+}
+
+@media screen {
+  .print-route {
+    min-height: 100dvh;
+    background: #cbd5e1;
+    padding: 12px;
+  }
+
+  .print-route .print-root {
+    margin: 0 auto;
+    max-width: 297mm;
+  }
+
+  .print-route .print-order-page {
+    width: 297mm;
+    min-height: 210mm;
+    margin: 0 auto 16px;
+    padding: 8mm 10mm;
+    background: #fff;
+    box-shadow: 0 4px 24px rgb(15 23 42 / 18%);
+    box-sizing: border-box;
+  }
+
+  .print-route .print-order-page-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(210mm - 16mm);
+    gap: 2mm;
+  }
+
+  .print-route .print-order-table-area {
+    flex: 1 1 auto;
+  }
+
+  .print-route .print-lines-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+
+  .print-route .print-line-row td {
+    height: 8.2mm;
+    vertical-align: middle;
+    padding: 0.8mm 1mm;
+  }
+
+  .print-route .print-part-code-segment {
+    border-right: 1px dotted #334155;
+  }
+
+  .print-route .print-part-code-segment:last-child {
+    border-right: none;
+  }
+
+  .print-route .print-order-footer {
+    margin-top: auto;
+  }
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .dashboard-chrome-root {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .dashboard-chrome-sidebar,
+  .dashboard-chrome-mobile-nav {
+    display: none !important;
+  }
+
+  .dashboard-chrome-main-pane,
+  .dashboard-chrome-main-scroll {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .print-route {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  .print-root {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: white !important;
+    color: #000 !important;
+  }
+
+  .print-order-sheet .print-order-page {
+    box-sizing: border-box;
+    width: 100%;
+    height: 194mm;
+    max-height: 194mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-order-sheet .print-order-page:last-of-type {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .print-order-sheet .print-page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .print-order-sheet .print-order-page-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 194mm;
+    gap: 1.5mm;
+  }
+
+  .print-order-sheet .print-order-header {
+    flex: 0 0 auto;
+  }
+
+  .print-order-sheet .print-order-table-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .print-order-sheet .print-order-footer {
+    flex: 0 0 auto;
+    margin-top: auto;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-order-sheet .print-lines-table {
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    line-height: 1.25;
+  }
+
+  .print-order-sheet .print-lines-table thead {
+    display: table-header-group;
+  }
+
+  .print-order-sheet .print-lines-table th,
+  .print-order-sheet .print-lines-table td {
+    padding: 0.8mm 1mm;
+    vertical-align: middle;
+    overflow: hidden;
+    word-wrap: break-word;
+    border-color: #000 !important;
+  }
+
+  .print-order-sheet .print-lines-table th {
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 0.6mm 1mm;
+  }
+
+  .print-order-sheet .print-line-row td {
+    height: 8.2mm;
+    max-height: 8.2mm;
+  }
+
+  .print-order-sheet .print-line-row-empty td {
+    height: 8.2mm;
+  }
+
+  .print-order-sheet .print-part-code-cell {
+    min-height: 6.5mm;
+    height: 100%;
+  }
+
+  .print-order-sheet .print-part-code-segment {
+    border-right: 1px dotted #334155;
+  }
+
+  .print-order-sheet .print-part-code-segment:last-child {
+    border-right: none;
+  }
+
+  .print-order-sheet .print-comment-box {
+    min-height: 18mm;
+    max-height: 24mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-order-sheet .print-sender-block {
+    min-width: 52mm;
+    max-width: 62mm;
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+
+  .print-hide-on-paper {
+    display: none !important;
+  }
+}
