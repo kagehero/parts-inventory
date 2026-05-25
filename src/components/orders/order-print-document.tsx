@@ -68,15 +68,15 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
     <table className="print-lines-table border border-black">
       <colgroup>
         <col style={{ width: "5%" }} />
-        <col style={{ width: "16%" }} />
-        <col style={{ width: "13%" }} />
-        <col style={{ width: "24%" }} />
+        <col style={{ width: "15%" }} />
+        <col style={{ width: "19%" }} />
+        <col style={{ width: "22%" }} />
         <col style={{ width: "5%" }} />
+        <col style={{ width: "7.5%" }} />
+        <col style={{ width: "7.5%" }} />
         <col style={{ width: "8%" }} />
-        <col style={{ width: "8%" }} />
-        <col style={{ width: "9%" }} />
-        <col style={{ width: "6%" }} />
-        <col style={{ width: "6%" }} />
+        <col style={{ width: "3.5%" }} />
+        <col style={{ width: "3.5%" }} />
       </colgroup>
       <thead>
         <tr>
@@ -104,13 +104,13 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
           <th className="border border-black text-center" rowSpan={2}>
             お客様名
           </th>
-          <th className="border border-black text-center" colSpan={2}>
+          <th className="print-delivery-col border border-black text-center" colSpan={2}>
             納期
           </th>
         </tr>
         <tr>
-          <th className="border border-black text-center">月</th>
-          <th className="border border-black text-center">日</th>
+          <th className="print-delivery-col border border-black text-center">月</th>
+          <th className="print-delivery-col border border-black text-center">日</th>
         </tr>
       </thead>
       <tbody>
@@ -128,8 +128,8 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
                 <td className="print-supplier-blank border border-black" />
                 <td className="print-supplier-blank border border-black" />
                 <td className="border border-black" />
-                <td className="print-supplier-blank border border-black" />
-                <td className="print-supplier-blank border border-black" />
+                <td className="print-supplier-blank print-delivery-col border border-black" />
+                <td className="print-supplier-blank print-delivery-col border border-black" />
               </tr>
             );
           }
@@ -138,6 +138,7 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
           const partNo = resolvePrintPartNo(line);
           const detail = resolvePrintLineDetail(line);
           const customer = line.endCustomerName?.trim() || "";
+          const itemName = resolvePrintItemName(line);
 
           return (
             <tr key={line.id} className="print-line-row">
@@ -145,14 +146,18 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
               <td className="border border-black p-0">
                 <PrintPartCodeCell partNo={partNo} />
               </td>
-              <td className="border border-black">{resolvePrintItemName(line)}</td>
-              <td className="border border-black whitespace-pre-wrap">{detail}</td>
+              <td className="print-line-item-name-cell border border-black align-top">
+                <span className="print-cell-lines-2">{itemName === "—" ? "" : itemName}</span>
+              </td>
+              <td className="print-line-detail-cell border border-black align-top">
+                <span className="print-cell-lines-2">{detail}</span>
+              </td>
               <td className="border border-black text-right tabular-nums">{line.orderedQty}</td>
               <td className="print-supplier-blank border border-black text-center">{PRINT_SUPPLIER_BLANK}</td>
               <td className="print-supplier-blank border border-black text-center">{PRINT_SUPPLIER_BLANK}</td>
               <td className="border border-black">{customer}</td>
-              <td className="print-supplier-blank border border-black" />
-              <td className="print-supplier-blank border border-black" />
+              <td className="print-supplier-blank print-delivery-col border border-black" />
+              <td className="print-supplier-blank print-delivery-col border border-black" />
             </tr>
           );
         })}
@@ -172,7 +177,7 @@ function PrintSenderBlock({
     <div className="print-sender-block">
       {company.name ? <p className="font-semibold">{company.name}</p> : null}
       {company.address ? <p>{company.address}</p> : null}
-      {order.contactName ? <p>{order.contactName} 様</p> : null}
+      {order.contactName ? <p>{order.contactName}</p> : null}
       {order.contactPhone ? <p>TEL {order.contactPhone}</p> : null}
       {order.contactEmail ? <p className="break-all">{order.contactEmail}</p> : null}
       {company.fax ? <p>FAX {company.fax}</p> : null}
