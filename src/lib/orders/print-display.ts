@@ -24,9 +24,15 @@ export function getCompanyPrintProfile() {
   return { name, fax, address };
 }
 
-/** FAX様式タイトル（注文・見積共通） */
-export function getPrintDocumentTitle(_documentType: OrderDocumentType): string {
-  return "部品注文（見積もり）";
+/** FAX様式タイトル（書類種別に応じてどちらか一方） */
+export function getPrintDocumentTitle(documentType: OrderDocumentType): string {
+  switch (documentType) {
+    case "QUOTE_REQUEST":
+      return "見積もり";
+    case "PURCHASE_ORDER":
+    default:
+      return "部品注文";
+  }
 }
 
 export const printPartNoModeLabels: Record<OrderLinePrintPartNoMode, string> = {

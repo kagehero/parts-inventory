@@ -112,6 +112,26 @@
     padding: 0.8mm 1mm;
   }
 
+  .print-route .print-line-item-name-cell,
+  .print-route .print-line-detail-cell {
+    vertical-align: top;
+    padding-top: 0.6mm;
+  }
+
+  .print-route .print-cell-lines-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    line-height: 1.12;
+    word-break: break-word;
+  }
+
+  .print-route .print-delivery-col {
+    font-size: 7pt;
+    padding: 0.4mm 0.2mm !important;
+  }
+
   .print-route .print-part-code-segment {
     border-right: 1px dotted #334155;
   }
@@ -254,6 +274,33 @@
   .print-order-sheet .print-line-row td {
     height: 8.2mm;
     max-height: 8.2mm;
+  }
+
+  .print-order-sheet .print-line-item-name-cell,
+  .print-order-sheet .print-line-detail-cell {
+    vertical-align: top;
+    padding-top: 0.5mm;
+    font-size: 8pt;
+    line-height: 1.12;
+  }
+
+  .print-order-sheet .print-cell-lines-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  .print-order-sheet .print-delivery-col {
+    font-size: 6.5pt;
+    padding: 0.3mm 0.2mm !important;
+  }
+
+  .print-order-sheet .print-lines-table thead .print-delivery-col {
+    font-size: 6.5pt;
+    letter-spacing: -0.02em;
   }
 
   .print-order-sheet .print-line-row-empty td {
