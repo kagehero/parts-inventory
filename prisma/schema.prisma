@@ -92,6 +92,8 @@ model Part {
   markupRate       Decimal?           @db.Decimal(6, 4)
   /// Cached sum of `inventory_logs.quantity`; updated only with receipt & usage transactions — not edited on the part form.
   currentQty       Int                @default(0)
+  /// 部品マスタ一覧の表示順（小さいほど上）
+  sortOrder        Int                @default(0)
   isAdHoc          Boolean            @default(false)
 
   orderLines        OrderLine[]
@@ -105,6 +107,7 @@ model Part {
   @@index([oemPartNo])
   @@index([aftermarketNo])
   @@index([compatibleModels])
+  @@index([sortOrder])
   @@map("parts")
 }
 

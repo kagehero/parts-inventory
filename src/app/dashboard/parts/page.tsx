@@ -4,6 +4,7 @@ import { DashboardContent, DashboardPageFrame } from "@/components/layout/dashbo
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { PartCreateDialog } from "@/components/parts/part-create-dialog";
 import { PartsDataTable, type PartsTableRow } from "@/components/parts/parts-data-table";
+import { PartsReorderTable } from "@/components/parts/parts-reorder-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { yen } from "@/lib/utils";
@@ -14,7 +15,8 @@ type SearchShape = Record<string, string | string[] | undefined>;
 export default async function PartsPage({ searchParams }: { searchParams: Promise<SearchShape> }) {
   const params = await searchParams;
   const qRaw = typeof params.q === "string" ? params.q : "";
-  const parts = await listPartsForMasterPage({ query: qRaw });
+  const searching = qRaw.trim().length > 0;
+  const parts = await listPartsForMasterPage({ query: qRaw, take: searching ? 250 : 5000 });
 
   const rows: PartsTableRow[] = parts.map((part) => ({
     id: part.id,
@@ -29,7 +31,11 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
     <DashboardPageFrame>
       <DashboardHeader
         title="部品マスタ"
-        description="品番・単価・現在庫と履歴ログを統合運用できます。一覧は並べ替えとクライアント側の細かな絞り込みが可能です（上部の送信検索とも併用可）。"
+        description={
+          searching
+            ? "検索結果の一覧です。並べ替えは検索をクリアした状態で行ってください。"
+            : "品番・単価・現在庫と履歴ログを統合運用できます。一覧はドラッグで並べ替え可能です。"
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             <PartCreateDialog>
@@ -54,9 +60,14 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
           <Button type="submit" variant="outline" size="sm" className="h-11">
             適用
           </Button>
+          {searching ? (
+            <Button variant="ghost" size="sm" className="h-11" asChild>
+              <Link href="/dashboard/parts">検索クリア</Link>
+            </Button>
+          ) : null}
         </form>
 
-        <PartsDataTable data={rows} />
+        {searching ? <PartsDataTable data={rows} /> : <PartsReorderTable data={rows} />}
       </DashboardContent>
     </DashboardPageFrame>
   );

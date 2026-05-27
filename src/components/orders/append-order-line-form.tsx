@@ -1,57 +1,30 @@
 "use client";
 
-import { useTransition, useState, useEffect, useMemo } from "react";
+import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrderLinePrintPartNoMode } from "@prisma/client";
 
 import { appendOrderLine } from "@/features/orders/actions";
+import type { PartPickerRow } from "@/server/services/parts.service";
+import { PartPicker } from "@/components/parts/part-picker";
 import { printDetailFieldHint, printDetailInputClassName, printPartNoModeLabels, resolvePrintPartNo } from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type PartSel = {
-  id: string;
-  name: string;
-  currentQty: number;
-  oemPartNo: string | null;
-  aftermarketNo: string | null;
-};
-
-export function AppendOrderLineForm({
-  orderId,
-  parts,
-}: {
-  orderId: string;
-  parts: PartSel[];
-}) {
+export function AppendOrderLineForm({ orderId }: { orderId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [mode, setMode] = useState<"MASTER" | "FREE_TEXT">("MASTER");
-  const [partId, setPartId] = useState(() => parts[0]?.id ?? "");
+  const [partId, setPartId] = useState("");
+  const [selectedPart, setSelectedPart] = useState<PartPickerRow | null>(null);
   const [qty, setQty] = useState(1);
   const [partNoMode, setPartNoMode] = useState<OrderLinePrintPartNoMode>("AUTO_AFTERMARKET");
   const [partNoOverride, setPartNoOverride] = useState("");
   const [lineDetail, setLineDetail] = useState("");
   const [endCustomerName, setEndCustomerName] = useState("");
-
-  const selectedPart = useMemo(
-    () => parts.find((p) => p.id === partId) ?? null,
-    [parts, partId],
-  );
-
-  useEffect(() => {
-    if (mode !== "MASTER") return;
-    if (parts.length === 0) {
-      setPartId("");
-      return;
-    }
-    if (!partId || !parts.some((p) => p.id === partId)) {
-      setPartId(parts[0]!.id);
-    }
-  }, [mode, parts, partId]);
 
   const previewLine =
     mode === "MASTER" && selectedPart
@@ -74,6 +47,8 @@ export function AppendOrderLineForm({
           },
         }
       : null;
+
+  const masterReady = mode !== "MASTER" || !!partId;
 
   return (
     <div className="grid gap-4 md:max-w-2xl">
@@ -168,69 +143,62 @@ export function AppendOrderLineForm({
 
         {mode === "MASTER" ? (
           <>
-            {parts.length === 0 ? (
-              <p className="text-xs text-destructive">
-                部品マスタが空です。直接入力に切り替えるか、先に部品登録してください。
-              </p>
-            ) : (
-              <>
-                <div className="grid gap-1">
-                  <Label htmlFor="part-select" className="text-xs text-muted-foreground font-normal" showRequired>
-                    対象品目
-                  </Label>
-                  <select
-                    id="part-select"
-                    name="partId"
-                    required={mode === "MASTER"}
-                    className="h-10 rounded-md border border-input px-2 text-[13px]"
-                    value={partId}
-                    onChange={(e) => setPartId(e.target.value)}
-                  >
-                    {parts.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}（現在庫 {p.currentQty}）
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="grid gap-1">
+              <Label htmlFor="part-picker-append" className="text-xs text-muted-foreground font-normal" showRequired>
+                対象品目（検索）
+              </Label>
+              <PartPicker
+                id="part-picker-append"
+                value={partId}
+                onChange={(id, part) => {
+                  setPartId(id);
+                  setSelectedPart(part);
+                }}
+                required={mode === "MASTER"}
+              />
+            </div>
 
-                <div className="grid gap-2 rounded border border-dashed border-border/70 bg-muted/10 p-2">
-                  <Label htmlFor="append-partno-mode" className="text-xs font-normal">
-                    印刷用品番
-                  </Label>
-                  <select
-                    id="append-partno-mode"
-                    name="printPartNoMode"
-                    className="h-9 rounded-md border border-input px-2 text-xs"
-                    value={partNoMode}
-                    onChange={(e) => setPartNoMode(e.target.value as OrderLinePrintPartNoMode)}
-                  >
-                    {(Object.keys(printPartNoModeLabels) as OrderLinePrintPartNoMode[]).map((m) => (
-                      <option key={m} value={m}>
-                        {printPartNoModeLabels[m]}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-muted-foreground">
-                    マスタ: 純正 {selectedPart?.oemPartNo || "—"} ／ 社外 {selectedPart?.aftermarketNo || "—"}
+            {selectedPart ? (
+              <div className="grid gap-2 rounded border border-dashed border-border/70 bg-muted/10 p-2">
+                <Label htmlFor="append-partno-mode" className="text-xs font-normal">
+                  印刷用品番
+                </Label>
+                <select
+                  id="append-partno-mode"
+                  name="printPartNoMode"
+                  className="h-9 rounded-md border border-input px-2 text-xs"
+                  value={partNoMode}
+                  onChange={(e) => setPartNoMode(e.target.value as OrderLinePrintPartNoMode)}
+                >
+                  {(Object.keys(printPartNoModeLabels) as OrderLinePrintPartNoMode[]).map((m) => (
+                    <option key={m} value={m}>
+                      {printPartNoModeLabels[m]}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-muted-foreground">
+                  マスタ: 純正 {selectedPart.oemPartNo || "—"} ／ 社外 {selectedPart.aftermarketNo || "—"}
+                </p>
+                {partNoMode === "CUSTOM" ? (
+                  <Input
+                    name="printPartNoOverride"
+                    className="h-8 text-xs"
+                    value={partNoOverride}
+                    onChange={(e) => setPartNoOverride(e.target.value)}
+                    placeholder="この注文だけの品番"
+                    required
+                  />
+                ) : null}
+                {previewLine ? (
+                  <p className="text-[10px] font-medium text-foreground">
+                    印刷プレビュー: {resolvePrintPartNo(previewLine)}
                   </p>
-                  {partNoMode === "CUSTOM" ? (
-                    <Input
-                      name="printPartNoOverride"
-                      className="h-8 text-xs"
-                      value={partNoOverride}
-                      onChange={(e) => setPartNoOverride(e.target.value)}
-                      placeholder="この注文だけの品番"
-                      required
-                    />
-                  ) : null}
-                  {previewLine ? (
-                    <p className="text-[10px] font-medium text-foreground">
-                      印刷プレビュー: {resolvePrintPartNo(previewLine)}
-                    </p>
-                  ) : null}
-                </div>
-              </>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                部品名・品番で検索して選択してください。マスタが空の場合は「直接入力」に切り替えてください。
+              </p>
             )}
           </>
         ) : (
@@ -287,7 +255,7 @@ export function AppendOrderLineForm({
               onChange={(e) => setQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
             />
           </div>
-          <Button type="submit" disabled={pending || (mode === "MASTER" && parts.length === 0)}>
+          <Button type="submit" disabled={pending || !masterReady}>
             {pending ? "処理中..." : "行を追加"}
           </Button>
         </div>

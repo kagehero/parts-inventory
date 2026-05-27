@@ -23,7 +23,6 @@ import { orderStatusLabel, orderLineStatusLabel, orderDocumentTypeLabel } from "
 import { resolvePrintPartNo, resolvePrintLineDetail } from "@/lib/orders/print-display";
 import { jpDateLabel } from "@/lib/utils";
 import { getOrderWithLines } from "@/server/services/orders.service";
-import { listPartsAlphabetical } from "@/server/services/parts.service";
 import { listSuppliersAlphabetical } from "@/server/services/suppliers.service";
 
 type ParamsPromise = Promise<{ id: string }>;
@@ -31,9 +30,8 @@ type ParamsPromise = Promise<{ id: string }>;
 export default async function OrderDetailPage(props: { params: ParamsPromise }) {
   const { id } = await props.params;
 
-  const [order, parts, suppliers] = await Promise.all([
+  const [order, suppliers] = await Promise.all([
     getOrderWithLines(id),
-    listPartsAlphabetical(),
     listSuppliersAlphabetical(),
   ]);
 
@@ -148,16 +146,7 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
           {!canModify ? (
             <p className="text-xs text-muted-foreground">取消済みの注文です。</p>
           ) : (
-            <AppendOrderLineForm
-              orderId={order.id}
-              parts={parts.map((p) => ({
-                id: p.id,
-                name: p.name,
-                currentQty: p.currentQty,
-                oemPartNo: p.oemPartNo,
-                aftermarketNo: p.aftermarketNo,
-              }))}
-            />
+            <AppendOrderLineForm orderId={order.id} />
           )}
         </section>
 
