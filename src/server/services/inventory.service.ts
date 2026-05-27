@@ -66,7 +66,7 @@ export async function listPartsStock(params: StockListParams = {}) {
 
   return prisma.part.findMany({
     where: Object.keys(where).length ? where : undefined,
-    orderBy: { name: "asc" },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     take,
   });
 }

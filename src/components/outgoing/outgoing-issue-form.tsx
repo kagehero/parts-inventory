@@ -6,6 +6,8 @@ import { useState, useTransition } from "react";
 import type { Customer, Machine } from "@prisma/client";
 
 import { createOutgoingIssue } from "@/features/outgoing/actions";
+import type { PartPickerRow } from "@/server/services/parts.service";
+import { PartPicker } from "@/components/parts/part-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +16,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 import type { OutgoingFormValues } from "@/features/outgoing/schemas";
 
-export type PartsOption = { id: string; name: string; currentQty: number };
-
 type Props = {
   customers: Customer[];
   machines: (Machine & { customer: Customer })[];
-  parts: PartsOption[];
 };
 
 type LineState =
@@ -43,7 +42,7 @@ export function OutgoingIssueForm(props: Props) {
     {
       id: Date.now(),
       kind: "master",
-      partId: props.parts[0]?.id ?? "",
+      partId: "",
       quantity: 1,
     },
   ]);
@@ -52,7 +51,7 @@ export function OutgoingIssueForm(props: Props) {
     lines.length > 0 &&
     lines.every((l) => {
       if (l.kind === "master") {
-        return props.parts.length > 0 && !!l.partId && l.quantity > 0;
+        return !!l.partId && l.quantity > 0;
       }
       return l.itemName.trim().length > 0 && l.quantity > 0;
     });
@@ -72,6 +71,10 @@ export function OutgoingIssueForm(props: Props) {
         machineEngineNo: l.machineEngineNo.trim() || undefined,
       };
     });
+  }
+
+  function setMasterPart(lineId: number, partId: string, _part: PartPickerRow | null) {
+    setLines((prev) => prev.map((l) => (l.id === lineId && l.kind === "master" ? { ...l, partId } : l)));
   }
 
   return (
@@ -151,7 +154,7 @@ export function OutgoingIssueForm(props: Props) {
                     {
                       id: Date.now(),
                       kind: "master",
-                      partId: props.parts[0]?.id ?? "",
+                      partId: "",
                       quantity: 1,
                     },
                   ]),
@@ -186,7 +189,7 @@ export function OutgoingIssueForm(props: Props) {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          伝票未到着で在庫のみ減らす場合は「臨時」行で品名を入れてください。在庫は不足分でも記録されます（マイナス在庫になり得ます）。
+          マスタ行は部品名・品番で検索して選択します。伝票未到着で在庫のみ減らす場合は「臨時」行で品名を入れてください（マイナス在庫になり得ます）。
         </p>
         <Table>
           <TableHeader>
@@ -205,21 +208,13 @@ export function OutgoingIssueForm(props: Props) {
                 </TableCell>
                 <TableCell className="align-top">
                   {line.kind === "master" ? (
-                    <select
-                      className="h-10 w-full max-w-xl rounded-md border border-input px-3 text-[13px]"
+                    <PartPicker
+                      id={`outgoing-part-${line.id}`}
                       value={line.partId}
-                      onChange={(e) =>
-                        setLines((prev) =>
-                          prev.map((l) => (l.id === line.id ? { ...l, partId: e.target.value } : l)),
-                        )
-                      }
-                    >
-                      {props.parts.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}（在庫 {p.currentQty}）
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(partId, part) => setMasterPart(line.id, partId, part)}
+                      required
+                      className="max-w-xl"
+                    />
                   ) : (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <Input
@@ -299,15 +294,6 @@ export function OutgoingIssueForm(props: Props) {
           </TableBody>
         </Table>
       </section>
-
-      {props.parts.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          部品マスタが空です。「臨時」行のみで出庫するか、
-          <Link href="/dashboard/parts/new" className="underline">
-            部品登録へ
-          </Link>
-        </p>
-      ) : null}
 
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
 

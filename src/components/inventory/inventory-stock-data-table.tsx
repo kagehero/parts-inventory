@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 
+import { StockAdjustForm } from "@/components/parts/stock-adjust-form";
 import { DataTable } from "@/components/data-table/data-table";
 
 export type InventoryStockRow = {
@@ -41,6 +42,18 @@ const columns: ColumnDef<InventoryStockRow>[] = [
     accessorKey: "qty",
     header: "現在庫",
     cell: ({ row }) => <span className="font-medium tabular-nums">{row.original.qty}</span>,
+  },
+  {
+    id: "adjust",
+    header: "在庫調整",
+    cell: ({ row }) => (
+      <StockAdjustForm
+        partId={row.original.id}
+        partName={row.original.name}
+        currentQty={row.original.qty}
+        compact
+      />
+    ),
   },
 ];
 

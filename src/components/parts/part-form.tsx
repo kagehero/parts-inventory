@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Part } from "@prisma/client";
 
 import { createPart, deletePart, updatePart } from "@/features/parts/actions";
+import { StockAdjustForm } from "@/components/parts/stock-adjust-form";
 import { useActionResultTransition } from "@/hooks/use-action-result-transition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,10 +103,15 @@ export function PartForm({ part, embedded, onSaved, onCancel }: Props) {
             <>
               <p className="text-lg font-semibold tabular-nums">{part?.currentQty ?? 0}</p>
               <p className="text-xs text-muted-foreground">
-                在庫はマスタから直接は変更しません。入荷（注文の受入）で増え、出庫（使用登録）で減ります。履歴は「在庫・履歴」で確認できます。
+                通常は入荷（注文の受入）で増え、出庫（使用登録）で減ります。棚卸・差異は下の「在庫の手動調整」から行えます（履歴に「棚卸・調整」として記録）。
               </p>
+              <StockAdjustForm
+                partId={part!.id}
+                partName={part!.name}
+                currentQty={part!.currentQty}
+              />
               <Button variant="ghost" size="sm" className="h-auto justify-start p-0 text-xs" asChild>
-                <Link href="/dashboard/inventory">在庫・履歴へ</Link>
+                <Link href={`/dashboard/parts/${part!.id}/ledger`}>入出庫履歴を見る</Link>
               </Button>
             </>
           ) : (

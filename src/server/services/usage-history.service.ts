@@ -1,7 +1,5 @@
 import { listCustomersAlphabetical } from "@/server/services/customers.service";
 import { listMachinesForOutgoing } from "@/server/services/machines.service";
-import { listPartsForStockPickers } from "@/server/services/parts.service";
-
 import type { DbClient } from "@/server/db/types";
 import { applyStockDelta } from "@/server/inventory/stock-delta";
 
@@ -125,13 +123,12 @@ export async function createUsageSlip(payload: CreateUsageSlipPayload): Promise<
 }
 
 export async function getOutgoingIssueFormData() {
-  const [customers, machines, parts] = await Promise.all([
+  const [customers, machines] = await Promise.all([
     listCustomersAlphabetical(),
     listMachinesForOutgoing(),
-    listPartsForStockPickers(),
   ]);
 
-  return { customers, machines, parts };
+  return { customers, machines };
 }
 
 export async function listUsageHistoriesForDashboard(take = 250) {
