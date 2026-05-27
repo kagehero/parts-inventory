@@ -111,6 +111,33 @@ export function resolvePrintItemName(line: OrderLineForPrint): string {
   return line.part?.name?.trim() || "—";
 }
 
+/** 印刷：品名右の詳細欄 — 1行あたりの目安文字数（入力UIと印刷列を揃える） */
+export const PRINT_DETAIL_CHARS_PER_LINE = 28;
+
+/** 印刷向けクラス名（注文詳細の詳細入力と同じ幅） */
+export const printDetailInputClassName =
+  "min-h-[3.2rem] w-full max-w-[28ch] font-mono text-xs leading-snug tabular-nums";
+
+export const printDetailFieldHint = `印刷の「詳細」欄と同じ幅です（約${PRINT_DETAIL_CHARS_PER_LINE}文字×2行）。保存後「更新」を押すと印刷に反映されます。`;
+
+/**
+ * 数字列の途中で折り返さないよう、区切りや長い英数字列の境界にゼロ幅スペースを入れる。
+ */
+export function softWrapPrintDetail(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+
+  const withSeparatorBreaks = trimmed.replace(/([/／\-\u2010-\u2015\s]+)/g, "$1\u200b");
+
+  return withSeparatorBreaks.replace(/([A-Za-z0-9]{8,})/g, (run) => {
+    const chunks: string[] = [];
+    for (let i = 0; i < run.length; i += 6) {
+      chunks.push(run.slice(i, i + 6));
+    }
+    return chunks.join("\u200b");
+  });
+}
+
 /** 印刷：品名右の詳細欄 */
 export function resolvePrintLineDetail(line: OrderLineForPrint): string {
   const detail = line.lineDetail?.trim();
@@ -125,7 +152,7 @@ export function resolvePrintLineDetail(line: OrderLineForPrint): string {
     );
   }
 
-  return line.part?.compatibleModels?.trim() || "";
+  return "";
 }
 
 /** @deprecated use resolvePrintLineDetail */

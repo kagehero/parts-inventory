@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { OrderLinePrintPartNoMode } from "@prisma/client";
 
 import { appendOrderLine } from "@/features/orders/actions";
-import { printPartNoModeLabels, resolvePrintPartNo } from "@/lib/orders/print-display";
+import { printDetailFieldHint, printDetailInputClassName, printPartNoModeLabels, resolvePrintPartNo } from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,6 +113,12 @@ export function AppendOrderLineForm({
               fd.set("printPartNoOverride", partNoOverride);
             }
           }
+          fd.set("lineDetail", lineDetail.trim());
+          fd.set("endCustomerName", endCustomerName.trim());
+          const lineNoteVal = fd.get("lineNote");
+          if (typeof lineNoteVal === "string") {
+            fd.set("lineNote", lineNoteVal.trim());
+          }
           startTransition(async () => {
             setMessage(null);
             const result = await appendOrderLine(fd);
@@ -130,6 +136,36 @@ export function AppendOrderLineForm({
           });
         }}
       >
+        <div className="grid gap-3 rounded-md border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
+          <div className="grid gap-1 sm:col-span-2">
+            <Label htmlFor="lineDetailAppend" className="text-xs font-medium text-foreground">
+              詳細（品名の右・印刷用）
+            </Label>
+            <Textarea
+              id="lineDetailAppend"
+              name="lineDetail"
+              rows={2}
+              className={printDetailInputClassName}
+              value={lineDetail}
+              onChange={(e) => setLineDetail(e.target.value)}
+              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
+            />
+            <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
+              お客様名（仕切単価の右・印刷用）
+            </Label>
+            <Input
+              id="endCustomerAppend"
+              name="endCustomerName"
+              value={endCustomerName}
+              onChange={(e) => setEndCustomerName(e.target.value)}
+              placeholder="例：花園"
+            />
+          </div>
+        </div>
+
         {mode === "MASTER" ? (
           <>
             {parts.length === 0 ? (
@@ -227,34 +263,6 @@ export function AppendOrderLineForm({
             </div>
           </div>
         )}
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="grid gap-1 sm:col-span-2">
-            <Label htmlFor="lineDetailAppend" className="text-xs text-muted-foreground font-normal">
-              詳細（品名の右・印刷用）
-            </Label>
-            <Textarea
-              id="lineDetailAppend"
-              name="lineDetail"
-              rows={2}
-              value={lineDetail}
-              onChange={(e) => setLineDetail(e.target.value)}
-              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
-              お客様名（仕切単価の右・印刷用）
-            </Label>
-            <Input
-              id="endCustomerAppend"
-              name="endCustomerName"
-              value={endCustomerName}
-              onChange={(e) => setEndCustomerName(e.target.value)}
-              placeholder="例：花園"
-            />
-          </div>
-        </div>
 
         <div className="grid gap-1">
           <Label htmlFor="lineNoteAppend" className="text-xs text-muted-foreground font-normal">
