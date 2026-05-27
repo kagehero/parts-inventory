@@ -4,7 +4,13 @@ import { useState, useTransition } from "react";
 import type { OrderLinePrintPartNoMode, OrderLineSource } from "@prisma/client";
 
 import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
-import { printPartNoModeLabels, resolvePrintPartNo } from "@/lib/orders/print-display";
+import {
+  printDetailFieldHint,
+  printDetailInputClassName,
+  printPartNoModeLabels,
+  resolvePrintLineDetail,
+  resolvePrintPartNo,
+} from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,21 +94,26 @@ export function OrderLineManage({
           },
         };
 
+  const printDetailPreview = resolvePrintLineDetail(previewLine);
+
   return (
     <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-3">
       <p className="mb-2 text-xs font-semibold text-foreground">明細の編集</p>
       <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
-        品番・詳細・お客様名・数量を変更できます。「更新」でFAX印刷レイアウトに反映されます。定価・仕切単価・納期は発注先記入用の空欄です。
+        「詳細」は印刷の詳細欄に出ます。入力後は必ず<strong className="font-semibold text-foreground">「更新」</strong>
+        を押してください。社内メモは印刷されません。
       </p>
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
-          const fd = new FormData(e.currentTarget);
+          const fd = new FormData();
           fd.set("orderLineId", lineId);
-          fd.set("printPartNoMode", partNoMode);
+          fd.set("orderedQty", String(qty));
+          fd.set("lineNote", note);
           fd.set("lineDetail", lineDetail);
           fd.set("endCustomerName", endCustomerName);
+          fd.set("printPartNoMode", partNoMode);
           if (lineSource === "FREE_TEXT") {
             fd.set("freePartNo", freePartNo);
             fd.set("freeItemName", freeItemName);
@@ -120,6 +131,40 @@ export function OrderLineManage({
           });
         }}
       >
+        <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-2">
+          <div className="grid gap-1">
+            <Label htmlFor={`line-detail-${lineId}`} className="text-xs font-medium text-foreground">
+              詳細（品名の右・印刷用）
+            </Label>
+            <Textarea
+              id={`line-detail-${lineId}`}
+              className={printDetailInputClassName}
+              rows={2}
+              value={lineDetail}
+              onChange={(e) => setLineDetail(e.target.value)}
+              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
+            />
+            <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
+            {printDetailPreview ? (
+              <p className="text-[10px] text-foreground">
+                印刷プレビュー: {printDetailPreview}
+              </p>
+            ) : null}
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor={`end-customer-${lineId}`} className="text-xs font-normal">
+              お客様名（仕切単価の右・印刷用）
+            </Label>
+            <Input
+              id={`end-customer-${lineId}`}
+              className="h-8 text-xs"
+              value={endCustomerName}
+              onChange={(e) => setEndCustomerName(e.target.value)}
+              placeholder="例：花園"
+            />
+          </div>
+        </div>
+
         {lineSource === "FREE_TEXT" ? (
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-1 sm:col-span-2">
@@ -128,7 +173,6 @@ export function OrderLineManage({
               </Label>
               <Input
                 id={`free-item-${lineId}`}
-                name="freeItemName"
                 className="h-8 text-xs"
                 value={freeItemName}
                 onChange={(e) => setFreeItemName(e.target.value)}
@@ -141,7 +185,6 @@ export function OrderLineManage({
               </Label>
               <Input
                 id={`free-partno-${lineId}`}
-                name="freePartNo"
                 className="h-8 text-xs"
                 value={freePartNo}
                 onChange={(e) => setFreePartNo(e.target.value)}
@@ -156,7 +199,6 @@ export function OrderLineManage({
             </Label>
             <select
               id={`partno-mode-${lineId}`}
-              name="printPartNoMode"
               className="h-9 rounded-md border border-input px-2 text-xs"
               value={partNoMode}
               onChange={(e) => setPartNoMode(e.target.value as OrderLinePrintPartNoMode)}
@@ -172,7 +214,6 @@ export function OrderLineManage({
             </p>
             {partNoMode === "CUSTOM" ? (
               <Input
-                name="printPartNoOverride"
                 className="h-8 text-xs"
                 value={partNoOverride}
                 onChange={(e) => setPartNoOverride(e.target.value)}
@@ -186,36 +227,6 @@ export function OrderLineManage({
           </div>
         )}
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-1 sm:col-span-2">
-            <Label htmlFor={`line-detail-${lineId}`} className="text-xs font-normal">
-              詳細（品名の右・印刷用）
-            </Label>
-            <Textarea
-              id={`line-detail-${lineId}`}
-              name="lineDetail"
-              rows={2}
-              className="min-h-[56px] text-xs"
-              value={lineDetail}
-              onChange={(e) => setLineDetail(e.target.value)}
-              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label htmlFor={`end-customer-${lineId}`} className="text-xs font-normal">
-              お客様名（仕切単価の右・印刷用）
-            </Label>
-            <Input
-              id={`end-customer-${lineId}`}
-              name="endCustomerName"
-              className="h-8 text-xs"
-              value={endCustomerName}
-              onChange={(e) => setEndCustomerName(e.target.value)}
-              placeholder="例：花園"
-            />
-          </div>
-        </div>
-
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
             <Label htmlFor={`order-line-qty-${lineId}`} showRequired className="text-xs text-muted-foreground font-normal">
@@ -225,7 +236,6 @@ export function OrderLineManage({
               id={`order-line-qty-${lineId}`}
               type="number"
               className="h-8 w-24 text-right"
-              name="orderedQty"
               required
               min={receivedQty || 1}
               step="1"
@@ -244,7 +254,6 @@ export function OrderLineManage({
           </Label>
           <Textarea
             id={`order-line-note-${lineId}`}
-            name="lineNote"
             rows={2}
             className="min-h-[56px] text-xs"
             value={note}

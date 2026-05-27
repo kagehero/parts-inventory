@@ -7,6 +7,7 @@ import {
   resolvePrintItemName,
   resolvePrintLineDetail,
   resolvePrintPartNo,
+  softWrapPrintDetail,
   splitPartCodeSegments,
 } from "@/lib/orders/print-display";
 import { jpDateLabel } from "@/lib/utils";
@@ -136,7 +137,7 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
 
           const line = row as OrderLine;
           const partNo = resolvePrintPartNo(line);
-          const detail = resolvePrintLineDetail(line);
+          const detail = softWrapPrintDetail(resolvePrintLineDetail(line));
           const customer = line.endCustomerName?.trim() || "";
           const itemName = resolvePrintItemName(line);
 

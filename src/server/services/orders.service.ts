@@ -7,6 +7,27 @@ import { prisma, withReconnect } from "@/lib/db";
 import { ActionError } from "@/lib/server/action-guard";
 import { orderLineStatusFromQuantities, orderProgressStatus } from "@/lib/domain/inventory";
 
+function composeOrderLineDetail(input: {
+  lineMode: "MASTER" | "FREE_TEXT";
+  lineDetail?: string | null;
+  machineModel?: string;
+  machineUnitNo?: string;
+  machineEngineNo?: string;
+}): string | null {
+  const explicit = input.lineDetail?.trim();
+  if (explicit) return explicit;
+
+  if (input.lineMode === "FREE_TEXT") {
+    const fromMachine = [input.machineModel, input.machineUnitNo, input.machineEngineNo]
+      .map((s) => s?.trim())
+      .filter(Boolean)
+      .join(" / ");
+    return fromMachine || null;
+  }
+
+  return null;
+}
+
 /**
  * Purchase **receipt** is the only path that increases on-hand stock (incoming):
  * we append a `PURCHASE_IN` ledger row (positive `quantity`) and bump `Part.currentQty`
@@ -81,6 +102,7 @@ export async function appendOrderLine(input: {
     if (input.lineMode === "MASTER") {
       const pid = input.partId?.trim();
       if (!pid) throw new ActionError("部品を選択してください");
+      const lineDetail = composeOrderLineDetail(input);
       await tx.orderLine.create({
         data: {
           orderId: input.orderId,
@@ -91,7 +113,7 @@ export async function appendOrderLine(input: {
             input.printPartNoMode === "CUSTOM" ? input.printPartNoOverride?.trim() || null : null,
           orderedQty: input.orderedQty,
           unitCost: input.unitCost ?? undefined,
-          lineDetail: input.lineDetail?.trim() || null,
+          lineDetail,
           endCustomerName: input.endCustomerName?.trim() || null,
           lineNote: input.lineNote?.trim() || null,
         },
@@ -99,6 +121,7 @@ export async function appendOrderLine(input: {
     } else {
       const name = input.freeItemName?.trim();
       if (!name) throw new ActionError("品名を入力してください");
+      const lineDetail = composeOrderLineDetail(input);
       await tx.orderLine.create({
         data: {
           orderId: input.orderId,
@@ -111,7 +134,7 @@ export async function appendOrderLine(input: {
           machineEngineNo: input.machineEngineNo?.trim() || undefined,
           orderedQty: input.orderedQty,
           unitCost: input.unitCost ?? undefined,
-          lineDetail: input.lineDetail?.trim() || null,
+          lineDetail,
           endCustomerName: input.endCustomerName?.trim() || null,
           lineNote: input.lineNote?.trim() || null,
         },

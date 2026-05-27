@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { CancelOrderButton } from "@/components/orders/cancel-order-button";
 import { ReceiveLineControl } from "@/components/orders/receive-line-control";
 import { AppendOrderLineForm } from "@/components/orders/append-order-line-form";
+import { OrderDetailPrintBar } from "@/components/orders/order-detail-print-bar";
 import { OrderHeaderEditForm } from "@/components/orders/order-header-edit-form";
 import { OrderLineManage } from "@/components/orders/order-line-manage";
 import { OrderAttachmentsPanel } from "@/components/orders/order-attachments-panel";
@@ -18,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { orderStatusLabel, orderLineStatusLabel, orderDocumentTypeLabel } from "@/lib/labels";
 import { resolvePrintPartNo, resolvePrintLineDetail } from "@/lib/orders/print-display";
 import { jpDateLabel } from "@/lib/utils";
@@ -48,20 +48,14 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
         title="注文明細／注文書"
         description={`${orderDocumentTypeLabel[order.documentType]}・${orderStatusLabel[order.status]}／相手先：${order.supplierName ?? "—"}${order.supplierHonorific?.trim() ? ` ${order.supplierHonorific.trim()}` : ""}`}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/print/orders/${order.id}`} target="_blank" rel="noreferrer">
-                印刷用表示
-              </Link>
-            </Button>
-            <Link href="/dashboard/orders" className="text-xs uppercase tracking-wide underline">
-              ← 一覧
-            </Link>
-          </div>
+          <Link href="/dashboard/orders" className="text-xs uppercase tracking-wide underline">
+            ← 一覧
+          </Link>
         }
       />
 
       <DashboardContent className="gap-6 px-8 py-6">
+        <OrderDetailPrintBar orderId={order.id} />
         {(!order.supplierName || !order.contactName) && canModify ? (
           <div className="rounded-lg border border-amber-400/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
             <strong>発注先または発注元担当者名が未入力です。</strong>
@@ -206,7 +200,12 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
                     <div className="font-medium">{labelName}</div>
                     <div className="text-xs text-muted-foreground">{sub}</div>
                     {lineNote ? (
-                      <div className="text-xs text-muted-foreground">備考：{lineNote}</div>
+                      <div className="text-xs text-muted-foreground">社内メモ：{lineNote}</div>
+                    ) : null}
+                    {resolvePrintLineDetail(line) ? (
+                      <div className="text-xs font-medium text-foreground">
+                        印刷詳細：{resolvePrintLineDetail(line)}
+                      </div>
                     ) : null}
                   </TableCell>
                   <TableCell className="text-right">

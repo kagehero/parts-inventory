@@ -124,7 +124,9 @@
     -webkit-line-clamp: 2;
     overflow: hidden;
     line-height: 1.12;
-    word-break: break-word;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-break: strict;
   }
 
   .print-route .print-delivery-col {
@@ -289,7 +291,9 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-    word-break: break-word;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-break: strict;
     white-space: normal;
   }
 
