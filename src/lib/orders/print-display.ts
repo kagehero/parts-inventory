@@ -111,14 +111,22 @@ export function resolvePrintItemName(line: OrderLineForPrint): string {
   return line.part?.name?.trim() || "—";
 }
 
-/** 印刷：品名右の詳細欄 — 1行あたりの目安文字数（入力UIと印刷列を揃える） */
-export const PRINT_DETAIL_CHARS_PER_LINE = 28;
+/**
+ * 印刷「詳細」列 = 注文表の 22%（A4横・297mm − 左右余白 20mm）。
+ * globals.css の --print-detail-col-width と同じ算出。
+ */
+/** 上記列幅・8pt 等幅での 1 行目安（入力ヒント用） */
+export const PRINT_DETAIL_CHARS_PER_LINE = 20;
 
-/** 印刷向けクラス名（注文詳細の詳細入力と同じ幅・書体） */
+/** 注文画面：詳細入力（幅は印刷列と同じ mm） */
 export const printDetailInputClassName =
-  "print-detail-input min-h-[calc(2*1.35em+0.5rem)] w-full max-w-[28ch] font-mono text-[11px] leading-[1.35] tabular-nums";
+  "print-detail-input min-h-[calc(2*1.35em+0.5rem)] w-full font-mono text-[11px] leading-[1.35] tabular-nums";
 
-export const printDetailFieldHint = `印刷の「詳細」欄と同じ幅です（${PRINT_DETAIL_CHARS_PER_LINE}文字×2行・等幅）。「更新（印刷に反映）」で保存されます。`;
+/** 注文画面：印刷プレビュー（書体・折り返しは印刷セルと同じ） */
+export const printDetailPreviewClassName =
+  "print-detail-preview font-mono text-[8pt] leading-[1.35] text-foreground";
+
+export const printDetailFieldHint = `印刷の「詳細」欄と同じ幅です（目安${PRINT_DETAIL_CHARS_PER_LINE}文字×2行）。「更新（印刷に反映）」で保存されます。`;
 
 /** 画面プレビュー用 — 印刷と同じ折り返しルールを適用 */
 export function previewPrintLineDetail(text: string): string {
