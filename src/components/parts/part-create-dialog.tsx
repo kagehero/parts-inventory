@@ -22,8 +22,8 @@ export function PartCreateDialog({ children }: { children?: React.ReactNode }) {
       <DialogTrigger asChild>{children ?? <Button size="sm">部品を登録</Button>}</DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-5rem)] max-w-3xl gap-6 overflow-hidden p-6 sm:p-8">
         <DialogHeader className="space-y-1 pr-6 text-left">
-          <DialogTitle className="text-lg font-semibold tracking-tight">部品を登録</DialogTitle>
-          <DialogDescription>マスタ項目を入力して保存してください。現在庫は履歴にも残ります。</DialogDescription>
+          <DialogTitle className="text-lg font-semibold tracking-tight">部品の新規登録</DialogTitle>
+          <DialogDescription>マスタ項目を入力して保存してください。新規登録時の在庫は 0 です。</DialogDescription>
         </DialogHeader>
         <div className="max-h-[min(70dvh,calc(100dvh-17rem))] overflow-y-auto pr-2">
           <PartForm embedded onSaved={() => setOpen(false)} onCancel={() => setOpen(false)} />

@@ -11,6 +11,7 @@ export type OrderTableRow = {
   statusLabel: string;
   docLabel: string;
   supplier: string;
+  contactName: string;
   lines: number;
 };
 
@@ -24,6 +25,7 @@ const columns: ColumnDef<OrderTableRow>[] = [
   { accessorKey: "docLabel", header: "書類" },
   { accessorKey: "statusLabel", header: "状態" },
   { accessorKey: "supplier", header: "発注先" },
+  { accessorKey: "contactName", header: "注文担当者" },
   {
     accessorKey: "lines",
     header: "行",
@@ -44,6 +46,11 @@ const columns: ColumnDef<OrderTableRow>[] = [
 
 export function OrdersDataTable({ data }: { data: OrderTableRow[] }) {
   return (
-    <DataTable columns={columns} data={data} filterPlaceholder="書類・状態・発注先・日付で絞り込み…" emptyLabel="注文がありません。" />
+    <DataTable
+      columns={columns}
+      data={data}
+      filterPlaceholder="書類・状態・発注先・担当者・日付で絞り込み…"
+      emptyLabel="注文がありません。"
+    />
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { fetchPartPickerRow, searchPartsForPicker } from "@/features/parts/actions";
 import type { PartPickerRow } from "@/server/services/parts.service";
+import { DashboardTabLink } from "@/components/layout/dashboard-tab-link";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -183,6 +184,19 @@ export function PartPicker({
               </button>
             ))
           )}
+          <div className="border-t border-border/80 px-3 py-2">
+            <DashboardTabLink href="/dashboard/parts" className="text-[11px] text-primary">
+              部品マスタを別タブで開く
+            </DashboardTabLink>
+            {selected ? (
+              <>
+                {" · "}
+                <DashboardTabLink href={`/dashboard/parts/${selected.id}`} className="text-[11px] text-primary">
+                  選択中の部品を別タブで開く
+                </DashboardTabLink>
+              </>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

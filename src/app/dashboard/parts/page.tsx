@@ -40,7 +40,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
           <div className="flex flex-wrap gap-2">
             <PartCreateDialog>
               <Button size="sm" className="shadow-inner shadow-white/70">
-                モーダルで登録
+                新規登録
               </Button>
             </PartCreateDialog>
             <Button variant="outline" size="sm" asChild>

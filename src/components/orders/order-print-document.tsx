@@ -151,7 +151,7 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
                 <span className="print-cell-lines-2">{itemName === "—" ? "" : itemName}</span>
               </td>
               <td className="print-line-detail-cell border border-black align-top">
-                <span className="print-cell-lines-2">{detail}</span>
+                <span className="print-cell-lines-2 whitespace-pre-wrap">{detail}</span>
               </td>
               <td className="border border-black text-right tabular-nums">{line.orderedQty}</td>
               <td className="print-supplier-blank border border-black text-center">{PRINT_SUPPLIER_BLANK}</td>

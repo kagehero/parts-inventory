@@ -114,11 +114,16 @@ export function resolvePrintItemName(line: OrderLineForPrint): string {
 /** 印刷：品名右の詳細欄 — 1行あたりの目安文字数（入力UIと印刷列を揃える） */
 export const PRINT_DETAIL_CHARS_PER_LINE = 28;
 
-/** 印刷向けクラス名（注文詳細の詳細入力と同じ幅） */
+/** 印刷向けクラス名（注文詳細の詳細入力と同じ幅・書体） */
 export const printDetailInputClassName =
-  "min-h-[3.2rem] w-full max-w-[28ch] font-mono text-xs leading-snug tabular-nums";
+  "print-detail-input min-h-[calc(2*1.35em+0.5rem)] w-full max-w-[28ch] font-mono text-[11px] leading-[1.35] tabular-nums";
 
-export const printDetailFieldHint = `印刷の「詳細」欄と同じ幅です（約${PRINT_DETAIL_CHARS_PER_LINE}文字×2行）。保存後「更新」を押すと印刷に反映されます。`;
+export const printDetailFieldHint = `印刷の「詳細」欄と同じ幅です（${PRINT_DETAIL_CHARS_PER_LINE}文字×2行・等幅）。「更新（印刷に反映）」で保存されます。`;
+
+/** 画面プレビュー用 — 印刷と同じ折り返しルールを適用 */
+export function previewPrintLineDetail(text: string): string {
+  return softWrapPrintDetail(text);
+}
 
 /**
  * 数字列の途中で折り返さないよう、区切りや長い英数字列の境界にゼロ幅スペースを入れる。
