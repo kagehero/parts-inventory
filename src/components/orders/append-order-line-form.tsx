@@ -7,7 +7,14 @@ import type { OrderLinePrintPartNoMode } from "@prisma/client";
 import { appendOrderLine } from "@/features/orders/actions";
 import type { PartPickerRow } from "@/server/services/parts.service";
 import { PartPicker } from "@/components/parts/part-picker";
-import { printDetailFieldHint, printDetailInputClassName, printPartNoModeLabels, resolvePrintPartNo } from "@/lib/orders/print-display";
+import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
+import {
+  printDetailFieldHint,
+  printDetailInputClassName,
+  printPartNoModeLabels,
+  previewPrintLineDetail,
+  resolvePrintPartNo,
+} from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +59,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
 
   return (
     <div className="grid gap-4 md:max-w-2xl">
+      <OrderReferenceLinks />
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
@@ -126,6 +134,13 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
             />
             <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
+            {lineDetail.trim() ? (
+              <p className="whitespace-pre-wrap font-mono text-[10px] leading-[1.35] text-foreground">
+                印刷プレビュー:
+                {"\n"}
+                {previewPrintLineDetail(lineDetail)}
+              </p>
+            ) : null}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">

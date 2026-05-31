@@ -118,6 +118,15 @@
     padding-top: 0.6mm;
   }
 
+  .print-route .print-line-detail-cell .print-cell-lines-2 {
+    display: block;
+    max-width: 28ch;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 8pt;
+    line-height: 1.35;
+    white-space: pre-wrap;
+  }
+
   .print-route .print-cell-lines-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -284,6 +293,18 @@
     padding-top: 0.5mm;
     font-size: 8pt;
     line-height: 1.12;
+  }
+
+  .print-order-sheet .print-line-detail-cell .print-cell-lines-2 {
+    display: block;
+    max-width: 28ch;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 8pt;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-break: strict;
   }
 
   .print-order-sheet .print-cell-lines-2 {

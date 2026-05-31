@@ -34,130 +34,139 @@ export function PartForm({ part, embedded, onSaved, onCancel }: Props) {
 
   const { pending, errorMessage, run } = useActionResultTransition();
 
+  const masterForm = (
+    <form
+      id="part-form"
+      className="grid gap-4 md:grid-cols-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        run(
+          () =>
+            editing && part?.id ? updatePart(part.id, formData) : createPart(formData),
+          {
+            okMessage: "部品マスタを保存しました",
+            onSuccess: () => {
+              if (!editing) onSaved?.();
+              if (!embedded) router.push("/dashboard/parts");
+              router.refresh();
+            },
+          },
+        );
+      }}
+    >
+      <div className="md:col-span-2 grid gap-2">
+        <Label htmlFor="name" showRequired>
+          部品名
+        </Label>
+        <Input id="name" name="name" defaultValue={part?.name ?? ""} required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="oemPartNo">純正パーツNo</Label>
+        <Input id="oemPartNo" name="oemPartNo" defaultValue={part?.oemPartNo ?? ""} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="aftermarketNo">社外パーツNo</Label>
+        <Input id="aftermarketNo" name="aftermarketNo" defaultValue={part?.aftermarketNo ?? ""} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="oemListPrice">純正定価</Label>
+        <Input id="oemListPrice" name="oemListPrice" defaultValue={decimalField(part?.oemListPrice)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="purchasePrice">仕入価格</Label>
+        <Input id="purchasePrice" name="purchasePrice" defaultValue={decimalField(part?.purchasePrice)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="salePrice">販売価格</Label>
+        <Input id="salePrice" name="salePrice" defaultValue={decimalField(part?.salePrice)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="markupRate">掛け率（例: 0.15）</Label>
+        <Input id="markupRate" name="markupRate" defaultValue={decimalField(part?.markupRate)} />
+      </div>
+      <div className="md:col-span-2 grid gap-2">
+        <Label htmlFor="compatibleModels">使用型式</Label>
+        <Input
+          id="compatibleModels"
+          name="compatibleModels"
+          defaultValue={part?.compatibleModels ?? ""}
+          placeholder="例: XX-710 / XX-730"
+        />
+      </div>
+      {editing ? (
+        <div className="grid gap-2 md:col-span-2 rounded-md border border-border/60 bg-muted/20 px-3 py-3">
+          <Label className="text-muted-foreground">現在庫（参照）</Label>
+          <p className="text-lg font-semibold tabular-nums">{part?.currentQty ?? 0}</p>
+          <p className="text-xs text-muted-foreground">
+            通常は入荷（注文の受入）で増え、出庫（使用登録）で減ります。棚卸・差異は下の「在庫の手動調整」で行います。
+          </p>
+        </div>
+      ) : (
+        <div className="md:col-span-2">
+          <p className="text-xs text-muted-foreground">新規登録時の在庫は 0 です。入荷処理後に増えます。</p>
+        </div>
+      )}
+    </form>
+  );
+
+  const actions = (
+    <div className="flex flex-wrap gap-2 pt-2">
+      <Button
+        type="submit"
+        form="part-form"
+        disabled={pending}
+        className="transition-transform active:scale-[0.985]"
+      >
+        {pending ? "保存中..." : "マスタを保存"}
+      </Button>
+      {!embedded ? (
+        <Button variant="outline" type="button" asChild disabled={pending}>
+          <Link href="/dashboard/parts">一覧へ戻る</Link>
+        </Button>
+      ) : (
+        <Button variant="outline" type="button" disabled={pending} onClick={() => onCancel?.()}>
+          閉じる
+        </Button>
+      )}
+      {editing && part?.id ? (
+        <Button
+          variant="destructive"
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (!confirm("削除してもよいですか？（利用済みの場合は削除できません）")) return;
+            run(() => deletePart(part.id), {
+              okMessage: "削除しました",
+              onSuccess: () => {
+                router.push("/dashboard/parts");
+                router.refresh();
+              },
+            });
+          }}
+        >
+          削除
+        </Button>
+      ) : null}
+    </div>
+  );
+
+  const stockAdjust =
+    editing && part?.id ? (
+      <div className="space-y-3 border-t border-border/60 pt-4">
+        <StockAdjustForm partId={part.id} partName={part.name} currentQty={part.currentQty} />
+        <Button variant="ghost" size="sm" className="h-auto justify-start p-0 text-xs" asChild>
+          <Link href={`/dashboard/parts/${part.id}/ledger`}>入出庫履歴を見る</Link>
+        </Button>
+      </div>
+    ) : null;
+
   const inner = (
     <>
       {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
-
-      <form
-        id="part-form"
-        className="grid gap-4 md:grid-cols-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const formData = new FormData(event.currentTarget);
-          run(
-            () =>
-              editing && part?.id ? updatePart(part.id, formData) : createPart(formData),
-            {
-              okMessage: "保存しました",
-              onSuccess: () => {
-                if (!editing) onSaved?.();
-                if (!embedded) router.push("/dashboard/parts");
-                router.refresh();
-              },
-            },
-          );
-        }}
-      >
-        <div className="md:col-span-2 grid gap-2">
-          <Label htmlFor="name" showRequired>
-            部品名
-          </Label>
-          <Input id="name" name="name" defaultValue={part?.name ?? ""} required />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="oemPartNo">純正パーツNo</Label>
-          <Input id="oemPartNo" name="oemPartNo" defaultValue={part?.oemPartNo ?? ""} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="aftermarketNo">社外パーツNo</Label>
-          <Input id="aftermarketNo" name="aftermarketNo" defaultValue={part?.aftermarketNo ?? ""} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="oemListPrice">純正定価</Label>
-          <Input id="oemListPrice" name="oemListPrice" defaultValue={decimalField(part?.oemListPrice)} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="purchasePrice">仕入価格</Label>
-          <Input id="purchasePrice" name="purchasePrice" defaultValue={decimalField(part?.purchasePrice)} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="salePrice">販売価格</Label>
-          <Input id="salePrice" name="salePrice" defaultValue={decimalField(part?.salePrice)} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="markupRate">掛け率（例: 0.15）</Label>
-          <Input id="markupRate" name="markupRate" defaultValue={decimalField(part?.markupRate)} />
-        </div>
-        <div className="md:col-span-2 grid gap-2">
-          <Label htmlFor="compatibleModels">使用型式</Label>
-          <Input
-            id="compatibleModels"
-            name="compatibleModels"
-            defaultValue={part?.compatibleModels ?? ""}
-            placeholder="例: XX-710 / XX-730"
-          />
-        </div>
-        <div className="grid gap-2 md:col-span-2 rounded-md border border-border/60 bg-muted/20 px-3 py-3">
-          <Label className="text-muted-foreground">現在庫</Label>
-          {editing ? (
-            <>
-              <p className="text-lg font-semibold tabular-nums">{part?.currentQty ?? 0}</p>
-              <p className="text-xs text-muted-foreground">
-                通常は入荷（注文の受入）で増え、出庫（使用登録）で減ります。棚卸・差異は下の「在庫の手動調整」から行えます（履歴に「棚卸・調整」として記録）。
-              </p>
-              <StockAdjustForm
-                partId={part!.id}
-                partName={part!.name}
-                currentQty={part!.currentQty}
-              />
-              <Button variant="ghost" size="sm" className="h-auto justify-start p-0 text-xs" asChild>
-                <Link href={`/dashboard/parts/${part!.id}/ledger`}>入出庫履歴を見る</Link>
-              </Button>
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground">新規登録時の在庫は 0 です。入荷処理後に増えます。</p>
-          )}
-        </div>
-      </form>
-
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button
-          type="submit"
-          form="part-form"
-          disabled={pending}
-          className="transition-transform active:scale-[0.985]"
-        >
-          {pending ? "保存中..." : "保存"}
-        </Button>
-        {!embedded ? (
-          <Button variant="outline" type="button" asChild disabled={pending}>
-            <Link href="/dashboard/parts">一覧へ戻る</Link>
-          </Button>
-        ) : (
-          <Button variant="outline" type="button" disabled={pending} onClick={() => onCancel?.()}>
-            閉じる
-          </Button>
-        )}
-        {editing && part?.id ? (
-          <Button
-            variant="destructive"
-            type="button"
-            disabled={pending}
-            onClick={() => {
-              if (!confirm("削除してもよいですか？（利用済みの場合は削除できません）")) return;
-              run(() => deletePart(part.id), {
-                okMessage: "削除しました",
-                onSuccess: () => {
-                  router.push("/dashboard/parts");
-                  router.refresh();
-                },
-              });
-            }}
-          >
-            削除
-          </Button>
-        ) : null}
-      </div>
+      {masterForm}
+      {stockAdjust}
+      {actions}
     </>
   );
 

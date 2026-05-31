@@ -7,6 +7,7 @@ import { CancelOrderButton } from "@/components/orders/cancel-order-button";
 import { ReceiveLineControl } from "@/components/orders/receive-line-control";
 import { AppendOrderLineForm } from "@/components/orders/append-order-line-form";
 import { OrderDetailPrintBar } from "@/components/orders/order-detail-print-bar";
+import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
 import { OrderHeaderEditForm } from "@/components/orders/order-header-edit-form";
 import { OrderLineManage } from "@/components/orders/order-line-manage";
 import { OrderAttachmentsPanel } from "@/components/orders/order-attachments-panel";
@@ -54,6 +55,7 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
 
       <DashboardContent className="gap-6 px-8 py-6">
         <OrderDetailPrintBar orderId={order.id} />
+        <OrderReferenceLinks />
         {(!order.supplierName || !order.contactName) && canModify ? (
           <div className="rounded-lg border border-amber-400/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
             <strong>発注先または発注元担当者名が未入力です。</strong>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import type { OrderLinePrintPartNoMode, OrderLineSource } from "@prisma/client";
 
 import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
@@ -8,9 +9,11 @@ import {
   printDetailFieldHint,
   printDetailInputClassName,
   printPartNoModeLabels,
+  previewPrintLineDetail,
   resolvePrintLineDetail,
   resolvePrintPartNo,
 } from "@/lib/orders/print-display";
+import { notifyActionResult } from "@/lib/toast-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +50,7 @@ export function OrderLineManage({
   oemPartNo,
   aftermarketNo,
 }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [qty, setQty] = useState(orderedQty);
@@ -57,6 +61,26 @@ export function OrderLineManage({
   const [partNoOverride, setPartNoOverride] = useState(initialOverride ?? "");
   const [freePartNo, setFreePartNo] = useState(initialFreePartNo ?? "");
   const [freeItemName, setFreeItemName] = useState(initialFreeItemName ?? "");
+
+  useEffect(() => {
+    setQty(orderedQty);
+    setNote(lineNote ?? "");
+    setLineDetail(initialLineDetail ?? "");
+    setEndCustomerName(initialEndCustomerName ?? "");
+    setPartNoMode(initialMode);
+    setPartNoOverride(initialOverride ?? "");
+    setFreePartNo(initialFreePartNo ?? "");
+    setFreeItemName(initialFreeItemName ?? "");
+  }, [
+    orderedQty,
+    lineNote,
+    initialLineDetail,
+    initialEndCustomerName,
+    initialMode,
+    initialOverride,
+    initialFreePartNo,
+    initialFreeItemName,
+  ]);
 
   if (receivedQty > 0) return null;
 
@@ -94,14 +118,14 @@ export function OrderLineManage({
           },
         };
 
-  const printDetailPreview = resolvePrintLineDetail(previewLine);
+  const printDetailPreview = previewPrintLineDetail(resolvePrintLineDetail(previewLine));
 
   return (
     <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-3">
       <p className="mb-2 text-xs font-semibold text-foreground">明細の編集</p>
       <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
-        「詳細」は印刷の詳細欄に出ます。入力後は必ず<strong className="font-semibold text-foreground">「更新」</strong>
-        を押してください。社内メモは印刷されません。
+        「詳細」は印刷の詳細欄に出ます。入力後は<strong className="font-semibold text-foreground">「更新（印刷に反映）」</strong>
+        を押してください（「保存」ボタンはありません）。社内メモは印刷されません。
       </p>
       <form
         className="flex flex-col gap-3"
@@ -123,11 +147,12 @@ export function OrderLineManage({
           startTransition(async () => {
             setMessage(null);
             const res = await updateOrderLine(fd);
+            notifyActionResult(res, "明細を更新しました（印刷用表示にも反映されます）");
             if (!res.ok) {
               setMessage(res.message);
               return;
             }
-            window.location.reload();
+            router.refresh();
           });
         }}
       >
@@ -146,8 +171,10 @@ export function OrderLineManage({
             />
             <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
             {printDetailPreview ? (
-              <p className="text-[10px] text-foreground">
-                印刷プレビュー: {printDetailPreview}
+              <p className="whitespace-pre-wrap font-mono text-[10px] leading-[1.35] text-foreground">
+                印刷プレビュー:
+                {"\n"}
+                {printDetailPreview}
               </p>
             ) : null}
           </div>
@@ -199,13 +226,13 @@ export function OrderLineManage({
             </Label>
             <select
               id={`partno-mode-${lineId}`}
-              className="h-9 rounded-md border border-input px-2 text-xs"
+              className="h-8 rounded-md border border-input px-2 text-xs"
               value={partNoMode}
               onChange={(e) => setPartNoMode(e.target.value as OrderLinePrintPartNoMode)}
             >
-              {(Object.keys(printPartNoModeLabels) as OrderLinePrintPartNoMode[]).map((mode) => (
-                <option key={mode} value={mode}>
-                  {printPartNoModeLabels[mode]}
+              {(Object.keys(printPartNoModeLabels) as OrderLinePrintPartNoMode[]).map((m) => (
+                <option key={m} value={m}>
+                  {printPartNoModeLabels[m]}
                 </option>
               ))}
             </select>
@@ -244,7 +271,7 @@ export function OrderLineManage({
             />
           </div>
           <Button type="submit" size="sm" variant="default" disabled={pending}>
-            {pending ? "保存中…" : "更新"}
+            {pending ? "保存中…" : "更新（印刷に反映）"}
           </Button>
         </div>
 
@@ -267,22 +294,23 @@ export function OrderLineManage({
         className="mt-3 border-t border-border/60 pt-3"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!window.confirm("この明細を削除しますか？")) return;
+          if (!confirm("この明細行を削除しますか？")) return;
           const fd = new FormData();
           fd.set("orderLineId", lineId);
           startTransition(async () => {
             setMessage(null);
             const res = await deleteOrderLine(fd);
+            notifyActionResult(res, "明細を削除しました");
             if (!res.ok) {
               setMessage(res.message);
               return;
             }
-            window.location.reload();
+            router.refresh();
           });
         }}
       >
         <Button type="submit" size="sm" variant="destructive" disabled={pending}>
-          明細を削除
+          行を削除
         </Button>
       </form>
     </div>

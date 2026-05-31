@@ -313,8 +313,15 @@ export async function deleteOrderLine(orderLineId: string): Promise<{ orderId: s
   });
 }
 
-export async function listOrdersForDashboard(take = 200) {
+export async function listOrdersForDashboard(params: { contact?: string; take?: number } = {}) {
+  const take = params.take ?? 200;
+  const contact = params.contact?.trim() ?? "";
+
   return prisma.order.findMany({
+    where:
+      contact.length > 0
+        ? { contactName: { contains: contact, mode: "insensitive" } }
+        : undefined,
     orderBy: { createdAt: "desc" },
     take,
     select: {
@@ -322,6 +329,7 @@ export async function listOrdersForDashboard(take = 200) {
       orderDate: true,
       status: true,
       supplierName: true,
+      contactName: true,
       documentType: true,
       _count: { select: { lines: true } },
     },
@@ -350,66 +358,68 @@ export async function updateOrderLine(input: {
   freePartNo?: string | null;
   freeItemName?: string | null;
 }): Promise<{ orderId: string }> {
-  return prisma.$transaction(async (tx) => {
-    const line = await tx.orderLine.findUnique({
-      where: { id: input.orderLineId },
-      include: { order: true },
-    });
-    if (!line) throw new ActionError("明細が見つかりません");
-    if (line.order.status === "CANCELLED") throw new ActionError("取消済みの注文です");
+  return withReconnect(() =>
+    prisma.$transaction(async (tx) => {
+      const line = await tx.orderLine.findUnique({
+        where: { id: input.orderLineId },
+        include: { order: true },
+      });
+      if (!line) throw new ActionError("明細が見つかりません");
+      if (line.order.status === "CANCELLED") throw new ActionError("取消済みの注文です");
 
-    if (input.orderedQty < line.receivedQty) {
-      throw new ActionError("発注数量は入荷済み数量以上にしてください");
-    }
-
-    const data: Prisma.OrderLineUpdateInput = {
-      orderedQty: input.orderedQty,
-      lineStatus: orderLineStatusFromQuantities(input.orderedQty, line.receivedQty),
-    };
-
-    if (input.lineNote !== undefined) {
-      data.lineNote = input.lineNote?.trim() || null;
-    }
-    if (input.lineDetail !== undefined) {
-      data.lineDetail = input.lineDetail?.trim() || null;
-    }
-    if (input.endCustomerName !== undefined) {
-      data.endCustomerName = input.endCustomerName?.trim() || null;
-    }
-    if (input.printPartNoMode !== undefined) {
-      data.printPartNoMode = input.printPartNoMode;
-      if (input.printPartNoMode !== "CUSTOM") {
-        data.printPartNoOverride = null;
+      if (input.orderedQty < line.receivedQty) {
+        throw new ActionError("発注数量は入荷済み数量以上にしてください");
       }
-    }
-    if (input.printPartNoOverride !== undefined) {
-      const effectiveMode = input.printPartNoMode ?? line.printPartNoMode;
-      if (effectiveMode === "CUSTOM") {
-        data.printPartNoOverride = input.printPartNoOverride?.trim() || null;
-      }
-    }
-    if (line.lineSource === "FREE_TEXT") {
-      if (input.freePartNo !== undefined) {
-        data.freePartNo = input.freePartNo?.trim() || null;
-      }
-      if (input.freeItemName !== undefined) {
-        data.freeItemName = input.freeItemName?.trim() || null;
-      }
-    }
 
-    await tx.orderLine.update({
-      where: { id: input.orderLineId },
-      data,
-    });
+      const data: Prisma.OrderLineUpdateInput = {
+        orderedQty: input.orderedQty,
+        lineStatus: orderLineStatusFromQuantities(input.orderedQty, line.receivedQty),
+      };
 
-    const lines = await tx.orderLine.findMany({ where: { orderId: line.orderId } });
-    await tx.order.update({
-      where: { id: line.orderId },
-      data: { status: orderProgressStatus(lines) },
-    });
+      if (input.lineNote !== undefined) {
+        data.lineNote = input.lineNote?.trim() || null;
+      }
+      if (input.lineDetail !== undefined) {
+        data.lineDetail = input.lineDetail?.trim() || null;
+      }
+      if (input.endCustomerName !== undefined) {
+        data.endCustomerName = input.endCustomerName?.trim() || null;
+      }
+      if (input.printPartNoMode !== undefined) {
+        data.printPartNoMode = input.printPartNoMode;
+        if (input.printPartNoMode !== "CUSTOM") {
+          data.printPartNoOverride = null;
+        }
+      }
+      if (input.printPartNoOverride !== undefined) {
+        const effectiveMode = input.printPartNoMode ?? line.printPartNoMode;
+        if (effectiveMode === "CUSTOM") {
+          data.printPartNoOverride = input.printPartNoOverride?.trim() || null;
+        }
+      }
+      if (line.lineSource === "FREE_TEXT") {
+        if (input.freePartNo !== undefined) {
+          data.freePartNo = input.freePartNo?.trim() || null;
+        }
+        if (input.freeItemName !== undefined) {
+          data.freeItemName = input.freeItemName?.trim() || null;
+        }
+      }
 
-    return { orderId: line.orderId };
-  });
+      await tx.orderLine.update({
+        where: { id: input.orderLineId },
+        data,
+      });
+
+      const lines = await tx.orderLine.findMany({ where: { orderId: line.orderId } });
+      await tx.order.update({
+        where: { id: line.orderId },
+        data: { status: orderProgressStatus(lines) },
+      });
+
+      return { orderId: line.orderId };
+    }),
+  );
 }
 
 export async function createOrderAttachmentRecord(input: {
