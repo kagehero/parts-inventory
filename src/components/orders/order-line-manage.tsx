@@ -8,10 +8,7 @@ import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
 import {
   printDetailFieldHint,
   printDetailInputClassName,
-  printDetailPreviewClassName,
   printPartNoModeLabels,
-  previewPrintLineDetail,
-  resolvePrintLineDetail,
   resolvePrintPartNo,
 } from "@/lib/orders/print-display";
 import { notifyActionResult } from "@/lib/toast-action";
@@ -119,8 +116,6 @@ export function OrderLineManage({
           },
         };
 
-  const printDetailPreview = previewPrintLineDetail(resolvePrintLineDetail(previewLine));
-
   return (
     <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-3">
       <p className="mb-2 text-xs font-semibold text-foreground">明細の編集</p>
@@ -157,7 +152,7 @@ export function OrderLineManage({
           });
         }}
       >
-        <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-2">
+        <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
           <div className="grid gap-1">
             <Label htmlFor={`line-detail-${lineId}`} className="text-xs font-medium text-foreground">
               詳細（品名の右・印刷用）
@@ -170,14 +165,7 @@ export function OrderLineManage({
               onChange={(e) => setLineDetail(e.target.value)}
               placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
             />
-            <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
-            {printDetailPreview ? (
-              <p className={printDetailPreviewClassName}>
-                印刷プレビュー:
-                {"\n"}
-                {printDetailPreview}
-              </p>
-            ) : null}
+            <p className="text-xs leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
           </div>
           <div className="grid gap-1">
             <Label htmlFor={`end-customer-${lineId}`} className="text-xs font-normal">

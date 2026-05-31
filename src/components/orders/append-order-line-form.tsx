@@ -11,9 +11,7 @@ import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
 import {
   printDetailFieldHint,
   printDetailInputClassName,
-  printDetailPreviewClassName,
   printPartNoModeLabels,
-  previewPrintLineDetail,
   resolvePrintPartNo,
 } from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
@@ -134,14 +132,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               onChange={(e) => setLineDetail(e.target.value)}
               placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
             />
-            <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
-            {lineDetail.trim() ? (
-              <p className={printDetailPreviewClassName}>
-                印刷プレビュー:
-                {"\n"}
-                {previewPrintLineDetail(lineDetail)}
-              </p>
-            ) : null}
+            <p className="text-xs leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
           </div>
           <div className="grid gap-1">
             <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
