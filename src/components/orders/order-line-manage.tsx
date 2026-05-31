@@ -8,6 +8,7 @@ import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
 import {
   printDetailFieldHint,
   printDetailInputClassName,
+  printDetailPreviewClassName,
   printPartNoModeLabels,
   previewPrintLineDetail,
   resolvePrintLineDetail,
@@ -171,7 +172,7 @@ export function OrderLineManage({
             />
             <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
             {printDetailPreview ? (
-              <p className="whitespace-pre-wrap font-mono text-[10px] leading-[1.35] text-foreground">
+              <p className={printDetailPreviewClassName}>
                 印刷プレビュー:
                 {"\n"}
                 {printDetailPreview}

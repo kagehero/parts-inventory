@@ -11,6 +11,7 @@ import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
 import {
   printDetailFieldHint,
   printDetailInputClassName,
+  printDetailPreviewClassName,
   printPartNoModeLabels,
   previewPrintLineDetail,
   resolvePrintPartNo,
@@ -135,7 +136,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
             />
             <p className="text-[10px] leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
             {lineDetail.trim() ? (
-              <p className="whitespace-pre-wrap font-mono text-[10px] leading-[1.35] text-foreground">
+              <p className={printDetailPreviewClassName}>
                 印刷プレビュー:
                 {"\n"}
                 {previewPrintLineDetail(lineDetail)}
@@ -233,7 +234,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               <Input name="freePartNo" placeholder="OEM / 社外品番" />
             </div>
             <div className="grid gap-1">
-              <Label className="text-xs text-muted-foreground">仕様機 型式</Label>
+              <Label className="text-xs text-muted-foreground">使用機 型式</Label>
               <Input name="machineModel" placeholder="例：SM-720" />
             </div>
             <div className="grid gap-1">

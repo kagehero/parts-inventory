@@ -25,6 +25,9 @@
     --input: 216 17% 88%;
     --ring: 239 48% 48%;
     --radius: 0.5625rem;
+    /* 注文書印刷：詳細列幅（表 inner 277mm × 22% − セル左右 padding） */
+    --print-sheet-inner-width: calc(297mm - 20mm);
+    --print-detail-col-width: calc(var(--print-sheet-inner-width) * 0.22 - 2mm);
   }
 
   .dark {
@@ -120,11 +123,15 @@
 
   .print-route .print-line-detail-cell .print-cell-lines-2 {
     display: block;
-    max-width: 28ch;
+    width: 100%;
+    max-width: none;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 8pt;
     line-height: 1.35;
     white-space: pre-wrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-break: strict;
   }
 
   .print-route .print-cell-lines-2 {
@@ -297,7 +304,8 @@
 
   .print-order-sheet .print-line-detail-cell .print-cell-lines-2 {
     display: block;
-    max-width: 28ch;
+    width: 100%;
+    max-width: none;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 8pt;
     line-height: 1.35;
@@ -362,4 +370,21 @@
   .print-hide-on-paper {
     display: none !important;
   }
+}
+
+/* 注文画面：詳細入力・プレビュー（印刷列幅 mm に合わせる） */
+.print-detail-input {
+  max-width: var(--print-detail-col-width);
+}
+
+.print-detail-preview {
+  max-width: var(--print-detail-col-width);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-break: strict;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
