@@ -25,9 +25,9 @@
     --input: 216 17% 88%;
     --ring: 239 48% 48%;
     --radius: 0.5625rem;
-    /* 注文書印刷：詳細列幅（表 inner 277mm × 22% − セル左右 padding） */
+    /* 注文書印刷：詳細列の外幅（表 inner × 22%） */
     --print-sheet-inner-width: calc(297mm - 20mm);
-    --print-detail-col-width: calc(var(--print-sheet-inner-width) * 0.22 - 2mm);
+    --print-detail-col-width: calc(var(--print-sheet-inner-width) * 0.22);
   }
 
   .dark {
@@ -60,6 +60,13 @@
   body {
     @apply bg-background text-foreground antialiased;
     text-rendering: optimizeLegibility;
+  }
+}
+
+/* ダッシュボード：本文 rem を約125%（サイドバーは px 指定が多く据え置き） */
+@media screen {
+  html.dashboard-text-125 {
+    font-size: 125%;
   }
 }
 
@@ -125,13 +132,6 @@
     display: block;
     width: 100%;
     max-width: none;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 8pt;
-    line-height: 1.35;
-    white-space: pre-wrap;
-    word-break: keep-all;
-    overflow-wrap: normal;
-    line-break: strict;
   }
 
   .print-route .print-cell-lines-2 {
@@ -306,13 +306,6 @@
     display: block;
     width: 100%;
     max-width: none;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 8pt;
-    line-height: 1.35;
-    white-space: pre-wrap;
-    word-break: keep-all;
-    overflow-wrap: normal;
-    line-break: strict;
   }
 
   .print-order-sheet .print-cell-lines-2 {
@@ -372,19 +365,32 @@
   }
 }
 
-/* 注文画面：詳細入力・プレビュー（印刷列幅 mm に合わせる） */
+/* 印刷「詳細」セル & 注文画面の詳細入力 — 同一ルール（8pt 等幅・列幅） */
+.print-route .print-line-detail-cell .print-cell-lines-2,
+.print-order-sheet .print-line-detail-cell .print-cell-lines-2,
 .print-detail-input {
-  max-width: var(--print-detail-col-width);
-}
-
-.print-detail-preview {
-  max-width: var(--print-detail-col-width);
+  box-sizing: border-box;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8pt;
+  line-height: 1.35;
   white-space: pre-wrap;
   word-break: keep-all;
   overflow-wrap: normal;
   line-break: strict;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.print-route .print-line-detail-cell .print-cell-lines-2,
+.print-order-sheet .print-line-detail-cell .print-cell-lines-2 {
+  display: block;
+  width: 100%;
+}
+
+.print-detail-input {
+  width: var(--print-detail-col-width) !important;
+  max-width: var(--print-detail-col-width) !important;
+  min-height: calc(2 * 1.35em + 1.6mm) !important;
+  height: auto;
+  padding: 0.8mm 1mm !important;
+  resize: none;
 }
