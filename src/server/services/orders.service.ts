@@ -6,6 +6,7 @@ import { applyStockDelta } from "@/server/inventory/stock-delta";
 import { prisma, withReconnect } from "@/lib/db";
 import { ActionError } from "@/lib/server/action-guard";
 import { orderLineStatusFromQuantities, orderProgressStatus } from "@/lib/domain/inventory";
+import { sanitizeLineDetailInput } from "@/lib/orders/print-display";
 
 function composeOrderLineDetail(input: {
   lineMode: "MASTER" | "FREE_TEXT";
@@ -15,7 +16,7 @@ function composeOrderLineDetail(input: {
   machineEngineNo?: string;
 }): string | null {
   const explicit = input.lineDetail?.trim();
-  if (explicit) return explicit;
+  if (explicit) return sanitizeLineDetailInput(explicit) || null;
 
   if (input.lineMode === "FREE_TEXT") {
     const fromMachine = [input.machineModel, input.machineUnitNo, input.machineEngineNo]
@@ -380,7 +381,8 @@ export async function updateOrderLine(input: {
         data.lineNote = input.lineNote?.trim() || null;
       }
       if (input.lineDetail !== undefined) {
-        data.lineDetail = input.lineDetail?.trim() || null;
+        const trimmed = input.lineDetail?.trim();
+        data.lineDetail = trimmed ? sanitizeLineDetailInput(trimmed) : null;
       }
       if (input.endCustomerName !== undefined) {
         data.endCustomerName = input.endCustomerName?.trim() || null;

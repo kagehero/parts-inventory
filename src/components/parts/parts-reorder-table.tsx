@@ -64,7 +64,7 @@ export function PartsReorderTable({ data: initialData }: Props) {
       </p>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
       <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="dashboard-dense-table w-full min-w-[640px] text-sm">
           <thead className="border-b border-border bg-muted/40 text-left text-xs text-muted-foreground">
             <tr>
               <th className="w-10 px-2 py-2" aria-label="並べ替え" />

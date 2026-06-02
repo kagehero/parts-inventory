@@ -5,12 +5,8 @@ import { useEffect, useState, useTransition } from "react";
 import type { OrderLinePrintPartNoMode, OrderLineSource } from "@prisma/client";
 
 import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
-import {
-  printDetailFieldHint,
-  printDetailInputClassName,
-  printPartNoModeLabels,
-  resolvePrintPartNo,
-} from "@/lib/orders/print-display";
+import { PrintDetailField } from "@/components/orders/print-detail-field";
+import { printPartNoModeLabels, resolvePrintPartNo, sanitizeLineDetailInput } from "@/lib/orders/print-display";
 import { notifyActionResult } from "@/lib/toast-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,7 +127,7 @@ export function OrderLineManage({
           fd.set("orderLineId", lineId);
           fd.set("orderedQty", String(qty));
           fd.set("lineNote", note);
-          fd.set("lineDetail", lineDetail);
+          fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
           fd.set("endCustomerName", endCustomerName);
           fd.set("printPartNoMode", partNoMode);
           if (lineSource === "FREE_TEXT") {
@@ -153,20 +149,11 @@ export function OrderLineManage({
         }}
       >
         <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-          <div className="grid gap-1">
-            <Label htmlFor={`line-detail-${lineId}`} className="text-xs font-medium text-foreground">
-              詳細（品名の右・印刷用）
-            </Label>
-            <Textarea
-              id={`line-detail-${lineId}`}
-              className={printDetailInputClassName}
-              rows={2}
-              value={lineDetail}
-              onChange={(e) => setLineDetail(e.target.value)}
-              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
-            />
-            <p className="text-xs leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
-          </div>
+          <PrintDetailField
+            id={`line-detail-${lineId}`}
+            value={lineDetail}
+            onChange={setLineDetail}
+          />
           <div className="grid gap-1">
             <Label htmlFor={`end-customer-${lineId}`} className="text-xs font-normal">
               お客様名（仕切単価の右・印刷用）

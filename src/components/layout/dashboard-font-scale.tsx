@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-/** ダッシュボード表示時のみ本文 rem を約125%に（印刷プレビュー画面は除外） */
+/** ダッシュボード表示時のみ本文 rem を約112.5%に（印刷プレビュー画面は除外） */
 export function DashboardFontScale() {
   const pathname = usePathname();
   const isPrintView = pathname.endsWith("/print");

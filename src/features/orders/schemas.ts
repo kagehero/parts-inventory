@@ -1,6 +1,18 @@
 import { z } from "zod";
 
 import { zOptionalTrimmedEmail, zOptionalTrimmedEmptyToUndef, zRequiredJp } from "@/lib/forms/zod-fields";
+import {
+  PRINT_DETAIL_CHARS_PER_LINE,
+  PRINT_DETAIL_MAX_CHARS,
+  PRINT_DETAIL_MAX_LINES,
+} from "@/lib/orders/print-display";
+
+const zLineDetailOptional = zOptionalTrimmedEmptyToUndef.refine(
+  (v) => v === undefined || [...v].length <= PRINT_DETAIL_MAX_CHARS,
+  {
+    message: `詳細は${PRINT_DETAIL_CHARS_PER_LINE}文字×${PRINT_DETAIL_MAX_LINES}行（${PRINT_DETAIL_MAX_CHARS}文字）までです。続きはコメント欄へ`,
+  },
+);
 
 const printPartNoModeSchema = z.enum(["AUTO_AFTERMARKET", "AUTO_OEM", "NONE", "CUSTOM"]);
 
@@ -35,7 +47,7 @@ export const orderLineAppendSchema = z
     machineModel: z.string().optional(),
     machineUnitNo: z.string().optional(),
     machineEngineNo: z.string().optional(),
-    lineDetail: z.string().optional(),
+    lineDetail: zLineDetailOptional,
     endCustomerName: z.string().optional(),
     lineNote: z.string().optional(),
   })
@@ -102,7 +114,7 @@ export const orderLineUpdateSchema = z
     printPartNoOverride: z.string().optional(),
     freePartNo: z.string().optional(),
     freeItemName: z.string().optional(),
-    lineDetail: z.string().optional(),
+    lineDetail: zLineDetailOptional,
     endCustomerName: z.string().optional(),
   })
   .superRefine((val, ctx) => {

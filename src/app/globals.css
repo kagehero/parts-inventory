@@ -63,10 +63,22 @@
   }
 }
 
-/* ダッシュボード：本文 rem を約125%（サイドバーは px 指定が多く据え置き） */
+/* ダッシュボード：本文 rem を約112.5%（一覧の行間肥大を抑える） */
 @media screen {
   html.dashboard-text-125 {
-    font-size: 125%;
+    font-size: 112.5%;
+  }
+
+  .dashboard-chrome-main-scroll .dashboard-dense-table th {
+    height: 2rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .dashboard-chrome-main-scroll .dashboard-dense-table td {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    line-height: 1.35;
   }
 }
 
@@ -126,12 +138,6 @@
   .print-route .print-line-detail-cell {
     vertical-align: top;
     padding-top: 0.6mm;
-  }
-
-  .print-route .print-line-detail-cell .print-cell-lines-2 {
-    display: block;
-    width: 100%;
-    max-width: none;
   }
 
   .print-route .print-cell-lines-2 {
@@ -302,12 +308,6 @@
     line-height: 1.12;
   }
 
-  .print-order-sheet .print-line-detail-cell .print-cell-lines-2 {
-    display: block;
-    width: 100%;
-    max-width: none;
-  }
-
   .print-order-sheet .print-cell-lines-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -365,32 +365,37 @@
   }
 }
 
-/* 印刷「詳細」セル & 注文画面の詳細入力 — 同一ルール（8pt 等幅・列幅） */
-.print-route .print-line-detail-cell .print-cell-lines-2,
-.print-order-sheet .print-line-detail-cell .print-cell-lines-2,
+/* 印刷「詳細」：25字×2行・注文表と同じ 8.5pt */
+.print-route .print-line-detail-cell .print-line-detail-text,
+.print-order-sheet .print-line-detail-cell .print-line-detail-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 25ch;
+  max-width: 25ch;
+  font-size: 8.5pt;
+  line-height: 1.25;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* 注文画面：詳細入力（25ch×2行・画面は text-sm） */
 .print-detail-input {
   box-sizing: border-box;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 8pt;
-  line-height: 1.35;
-  white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: normal;
-  line-break: strict;
-  font-variant-numeric: tabular-nums;
-}
-
-.print-route .print-line-detail-cell .print-cell-lines-2,
-.print-order-sheet .print-line-detail-cell .print-cell-lines-2 {
-  display: block;
-  width: 100%;
-}
-
-.print-detail-input {
-  width: var(--print-detail-col-width) !important;
-  max-width: var(--print-detail-col-width) !important;
-  min-height: calc(2 * 1.35em + 1.6mm) !important;
+  width: 25ch !important;
+  min-width: 25ch !important;
+  max-width: 25ch !important;
+  min-height: calc(2 * 1.35em + 0.25rem) !important;
   height: auto;
-  padding: 0.8mm 1mm !important;
+  overflow-x: hidden !important;
+  overflow-y: auto;
   resize: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  font-size: inherit;
+  line-height: 1.35;
 }
