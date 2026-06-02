@@ -8,12 +8,8 @@ import { appendOrderLine } from "@/features/orders/actions";
 import type { PartPickerRow } from "@/server/services/parts.service";
 import { PartPicker } from "@/components/parts/part-picker";
 import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
-import {
-  printDetailFieldHint,
-  printDetailInputClassName,
-  printPartNoModeLabels,
-  resolvePrintPartNo,
-} from "@/lib/orders/print-display";
+import { PrintDetailField } from "@/components/orders/print-detail-field";
+import { printPartNoModeLabels, resolvePrintPartNo, sanitizeLineDetailInput } from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,7 +91,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               fd.set("printPartNoOverride", partNoOverride);
             }
           }
-          fd.set("lineDetail", lineDetail.trim());
+          fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
           fd.set("endCustomerName", endCustomerName.trim());
           const lineNoteVal = fd.get("lineNote");
           if (typeof lineNoteVal === "string") {
@@ -119,20 +115,13 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
         }}
       >
         <div className="grid gap-3 rounded-md border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
-          <div className="grid gap-1 sm:col-span-2">
-            <Label htmlFor="lineDetailAppend" className="text-xs font-medium text-foreground">
-              詳細（品名の右・印刷用）
-            </Label>
-            <Textarea
+          <div className="sm:col-span-2">
+            <PrintDetailField
               id="lineDetailAppend"
               name="lineDetail"
-              rows={2}
-              className={printDetailInputClassName}
               value={lineDetail}
-              onChange={(e) => setLineDetail(e.target.value)}
-              placeholder="例：型式・号機・エンジンNo.／受注後1〜2日入荷 など"
+              onChange={setLineDetail}
             />
-            <p className="text-xs leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
           </div>
           <div className="grid gap-1">
             <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
