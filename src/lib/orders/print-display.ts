@@ -111,69 +111,74 @@ export function resolvePrintItemName(line: OrderLineForPrint): string {
   return line.part?.name?.trim() || "—";
 }
 
-/** 運用FAX注文書：詳細欄 25文字×2行 */
-export const PRINT_DETAIL_CHARS_PER_LINE = 25;
-export const PRINT_DETAIL_MAX_LINES = 2;
-export const PRINT_DETAIL_MAX_CHARS = PRINT_DETAIL_CHARS_PER_LINE * PRINT_DETAIL_MAX_LINES;
+/** 画面入力：明細を追加 */
+export const LINE_DETAIL_APPEND_CHARS_PER_LINE = 21;
+/** 画面入力：明細の編集 */
+export const LINE_DETAIL_EDIT_CHARS_PER_LINE = 20;
+/** 画面入力：共通 */
+export const LINE_DETAIL_INPUT_MAX_LINES = 3;
+export const LINE_DETAIL_INPUT_MAX_CHARS = 50;
 
-/** 注文画面：詳細入力（globals.css .print-detail-input） */
+/** 運用FAX：アルファベット大文字25字×2行 */
+export const LINE_DETAIL_PRINT_CHARS_PER_LINE = 25;
+export const LINE_DETAIL_PRINT_MAX_LINES = 2;
+
+export type LineDetailInputMode = "append" | "edit";
+
 export const printDetailInputClassName = "print-detail-input";
 
-export const printDetailFieldHint = `FAXの「詳細」と同じ${PRINT_DETAIL_CHARS_PER_LINE}文字×${PRINT_DETAIL_MAX_LINES}行です。入りきらない場合は注文書下部のコメント欄へ。「更新（印刷に反映）」で保存されます。`;
+export function printDetailInputModeClass(mode: LineDetailInputMode): string {
+  return mode === "append" ? "print-detail-input--append" : "print-detail-input--edit";
+}
 
-/** 入力・保存用：最大2行・50文字まで */
+export function getPrintDetailFieldHint(mode: LineDetailInputMode): string {
+  const perLine = mode === "append" ? LINE_DETAIL_APPEND_CHARS_PER_LINE : LINE_DETAIL_EDIT_CHARS_PER_LINE;
+  return `FAX「詳細」は印刷時${LINE_DETAIL_PRINT_CHARS_PER_LINE}字×${LINE_DETAIL_PRINT_MAX_LINES}行（目安）。入力は${perLine}字で折り返し・${LINE_DETAIL_INPUT_MAX_LINES}行・合計${LINE_DETAIL_INPUT_MAX_CHARS}字まで。超える分はコメント欄へ。「更新（印刷に反映）」で保存。`;
+}
+
+/** @deprecated use LINE_DETAIL_INPUT_MAX_CHARS */
+export const PRINT_DETAIL_MAX_CHARS = LINE_DETAIL_INPUT_MAX_CHARS;
+
+/** 入力・保存用：最大3行・50文字まで */
 export function sanitizeLineDetailInput(raw: string): string {
   const normalized = raw.replace(/\r\n/g, "\n");
-  const lines = normalized.split("\n").slice(0, PRINT_DETAIL_MAX_LINES);
+  const lines = normalized.split("\n").slice(0, LINE_DETAIL_INPUT_MAX_LINES);
   const joined = lines.join("\n");
   const chars = [...joined];
-  if (chars.length <= PRINT_DETAIL_MAX_CHARS) return joined;
-  return chars.slice(0, PRINT_DETAIL_MAX_CHARS).join("");
+  if (chars.length <= LINE_DETAIL_INPUT_MAX_CHARS) return joined;
+  return chars.slice(0, LINE_DETAIL_INPUT_MAX_CHARS).join("");
 }
 
 /**
- * 印刷表示用：25文字で折り返し、最大2行（超過分は印刷しない＝コメント欄へ誘導）
+ * 印刷表示用：25字で区切り、続きがある行末に「…」（最大2行）
  */
 export function formatPrintLineDetail(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return "";
+  const flat = text.trim().replace(/\r\n/g, "").replace(/\n/g, "");
+  if (!flat) return "";
 
-  const logical = trimmed.replace(/\u200b/g, "").replace(/\r\n/g, "\n");
-  const rawLines = logical.split("\n").slice(0, PRINT_DETAIL_MAX_LINES);
-  const wrapped: string[] = [];
+  const chars = [...flat];
+  const lines: string[] = [];
+  let pos = 0;
 
-  for (const rawLine of rawLines) {
-    const chars = [...rawLine];
-    for (let i = 0; i < chars.length; i += PRINT_DETAIL_CHARS_PER_LINE) {
-      if (wrapped.length >= PRINT_DETAIL_MAX_LINES) break;
-      wrapped.push(chars.slice(i, i + PRINT_DETAIL_CHARS_PER_LINE).join(""));
-    }
-    if (wrapped.length >= PRINT_DETAIL_MAX_LINES) break;
+  for (let i = 0; i < LINE_DETAIL_PRINT_MAX_LINES && pos < chars.length; i++) {
+    const chunk = chars.slice(pos, pos + LINE_DETAIL_PRINT_CHARS_PER_LINE);
+    pos += chunk.length;
+    let line = chunk.join("");
+    if (pos < chars.length) line += "…";
+    lines.push(line);
   }
 
-  return wrapped.slice(0, PRINT_DETAIL_MAX_LINES).join("\n");
+  return lines.join("\n");
 }
 
 /**
- * 数字列の途中で折り返さないよう、区切りや長い英数字列の境界にゼロ幅スペースを入れる。
  * @deprecated 印刷は formatPrintLineDetail を使用
  */
 export function softWrapPrintDetail(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return "";
-
-  const withSeparatorBreaks = trimmed.replace(/([/／\-\u2010-\u2015\s]+)/g, "$1\u200b");
-
-  return withSeparatorBreaks.replace(/([A-Za-z0-9]{8,})/g, (run) => {
-    const chunks: string[] = [];
-    for (let i = 0; i < run.length; i += 6) {
-      chunks.push(run.slice(i, i + 6));
-    }
-    return chunks.join("\u200b");
-  });
+  return formatPrintLineDetail(text);
 }
 
-/** 印刷：品名右の詳細欄（25字×2行に整形） */
+/** 印刷：品名右の詳細欄 */
 export function resolvePrintLineDetail(line: OrderLineForPrint): string {
   const detail = line.lineDetail?.trim();
   if (detail) return formatPrintLineDetail(detail);

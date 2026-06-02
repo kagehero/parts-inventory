@@ -151,6 +151,7 @@ export function OrderLineManage({
         <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
           <PrintDetailField
             id={`line-detail-${lineId}`}
+            mode="edit"
             value={lineDetail}
             onChange={setLineDetail}
           />

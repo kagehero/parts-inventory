@@ -119,6 +119,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
             <PrintDetailField
               id="lineDetailAppend"
               name="lineDetail"
+              mode="append"
               value={lineDetail}
               onChange={setLineDetail}
             />
