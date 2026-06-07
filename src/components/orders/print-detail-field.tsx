@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 import {
-  PRINT_DETAIL_MAX_CHARS,
+  LINE_DETAIL_MAX_CHARS,
   printDetailFieldHint,
   printDetailInputClassName,
   sanitizeLineDetailInput,
@@ -37,14 +37,14 @@ export function PrintDetailField({
 
   return (
     <div className="grid gap-1">
-      <Label htmlFor={id} className="text-xs font-medium text-foreground">
+      <Label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </Label>
       <Textarea
         id={id}
         name={name}
         rows={2}
-        maxLength={PRINT_DETAIL_MAX_CHARS}
+        maxLength={LINE_DETAIL_MAX_CHARS}
         className={printDetailInputClassName}
         value={value}
         onChange={handleChange}

@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { orderStatusLabel, orderLineStatusLabel, orderDocumentTypeLabel } from "@/lib/labels";
-import { resolvePrintPartNo, resolvePrintLineDetail } from "@/lib/orders/print-display";
+import { resolvePrintPartNo } from "@/lib/orders/print-display";
 import { jpDateLabel } from "@/lib/utils";
 import { getOrderWithLines } from "@/server/services/orders.service";
 import { listSuppliersAlphabetical } from "@/server/services/suppliers.service";
@@ -174,8 +174,6 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
               } else {
                 subParts.push(`印刷品番: ${resolvePrintPartNo(line)}`);
               }
-              const detail = resolvePrintLineDetail(line);
-              if (detail) subParts.push(`詳細: ${detail}`);
               if (line.endCustomerName?.trim()) subParts.push(`お客様: ${line.endCustomerName.trim()}`);
               const sub =
                 line.lineSource === "FREE_TEXT" && subParts.length === 0
@@ -187,38 +185,18 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
               return (
                 <TableRow key={line.id}>
                   <TableCell>{orderLineStatusLabel[line.lineStatus]}</TableCell>
-                  <TableCell>
+                  <TableCell className="align-top">
                     <div className="font-medium">{labelName}</div>
                     <div className="text-xs text-muted-foreground">{sub}</div>
                     {lineNote ? (
                       <div className="text-xs text-muted-foreground">社内メモ：{lineNote}</div>
                     ) : null}
-                    {resolvePrintLineDetail(line) ? (
-                      <div className="text-xs font-medium text-foreground">
-                        印刷詳細：{resolvePrintLineDetail(line)}
-                      </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="font-semibold">
-                      {line.orderedQty}/{line.receivedQty}
-                    </div>
-                    <div className="text-xs text-muted-foreground">残 {remaining}</div>
-                  </TableCell>
-                  <TableCell className="min-w-[260px]">
-                    {!canModify ? (
-                      "—"
-                    ) : line.receivedQty > 0 ? (
-                      "—"
-                    ) : (
-                      <div className="space-y-3">
+                    {canModify && line.receivedQty === 0 ? (
+                      <div className="mt-3 max-w-xl">
                         {!line.partId ? (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="mb-2 text-xs text-muted-foreground">
                             マスタ未連携行（FAX用・入荷は別途マスタ行で）
                           </p>
-                        ) : null}
-                        {canReceiveLine ? (
-                          <ReceiveLineControl orderLineId={line.id} remaining={remaining} />
                         ) : null}
                         <OrderLineManage
                           lineId={line.id}
@@ -236,6 +214,21 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
                           aftermarketNo={line.part?.aftermarketNo ?? null}
                         />
                       </div>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right align-top">
+                    <div className="font-semibold">
+                      {line.orderedQty}/{line.receivedQty}
+                    </div>
+                    <div className="text-xs text-muted-foreground">残 {remaining}</div>
+                  </TableCell>
+                  <TableCell className="min-w-[140px] align-top">
+                    {!canModify || line.receivedQty > 0 ? (
+                      "—"
+                    ) : canReceiveLine ? (
+                      <ReceiveLineControl orderLineId={line.id} remaining={remaining} />
+                    ) : (
+                      "—"
                     )}
                   </TableCell>
                 </TableRow>

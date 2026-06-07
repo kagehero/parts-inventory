@@ -365,37 +365,41 @@
   }
 }
 
-/* 印刷「詳細」：25字×2行・注文表と同じ 8.5pt */
+/* 詳細欄：入力・印刷で同じ 25ch×2行（FAX運用に合わせる） */
+.print-detail-input,
+.print-route .print-line-detail-cell .print-line-detail-text,
+.print-order-sheet .print-line-detail-cell .print-line-detail-text {
+  box-sizing: border-box;
+  width: 25ch;
+  min-width: 25ch;
+  max-width: 25ch;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.print-detail-input {
+  min-height: calc(2 * 1.35em + 0.25rem) !important;
+  height: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  resize: none;
+}
+
+/* 印刷：品名・詳細（入力欄 text-sm に近い 12pt） */
+.print-route .print-line-item-name-cell .print-cell-lines-2,
+.print-order-sheet .print-line-item-name-cell .print-cell-lines-2,
+.print-route .print-line-detail-cell .print-line-detail-text,
+.print-order-sheet .print-line-detail-cell .print-line-detail-text {
+  font-size: 12pt;
+  line-height: 1.3;
+}
+
 .print-route .print-line-detail-cell .print-line-detail-text,
 .print-order-sheet .print-line-detail-cell .print-line-detail-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  box-sizing: border-box;
-  width: 25ch;
-  max-width: 25ch;
-  font-size: 8.5pt;
-  line-height: 1.25;
-  white-space: pre-wrap;
-  word-break: break-all;
-  overflow-wrap: anywhere;
-}
-
-/* 注文画面：詳細入力（25ch×2行・画面は text-sm） */
-.print-detail-input {
-  box-sizing: border-box;
-  width: 25ch !important;
-  min-width: 25ch !important;
-  max-width: 25ch !important;
-  min-height: calc(2 * 1.35em + 0.25rem) !important;
-  height: auto;
-  overflow-x: hidden !important;
-  overflow-y: auto;
-  resize: none;
-  white-space: pre-wrap;
-  word-break: break-all;
-  overflow-wrap: anywhere;
-  font-size: inherit;
-  line-height: 1.35;
 }
