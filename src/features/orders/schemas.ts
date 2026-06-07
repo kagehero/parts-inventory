@@ -2,16 +2,15 @@ import { z } from "zod";
 
 import { zOptionalTrimmedEmail, zOptionalTrimmedEmptyToUndef, zRequiredJp } from "@/lib/forms/zod-fields";
 import {
-  LINE_DETAIL_INPUT_MAX_CHARS,
-  LINE_DETAIL_INPUT_MAX_LINES,
-  LINE_DETAIL_PRINT_CHARS_PER_LINE,
-  LINE_DETAIL_PRINT_MAX_LINES,
+  LINE_DETAIL_CHARS_PER_LINE,
+  LINE_DETAIL_MAX_CHARS,
+  LINE_DETAIL_MAX_LINES,
 } from "@/lib/orders/print-display";
 
 const zLineDetailOptional = zOptionalTrimmedEmptyToUndef.refine(
-  (v) => v === undefined || [...v].length <= LINE_DETAIL_INPUT_MAX_CHARS,
+  (v) => v === undefined || [...v].length <= LINE_DETAIL_MAX_CHARS,
   {
-    message: `詳細は${LINE_DETAIL_INPUT_MAX_LINES}行・${LINE_DETAIL_INPUT_MAX_CHARS}文字までです（印刷は${LINE_DETAIL_PRINT_CHARS_PER_LINE}字×${LINE_DETAIL_PRINT_MAX_LINES}行）。続きはコメント欄へ`,
+    message: `詳細は${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（${LINE_DETAIL_MAX_CHARS}字）までです。続きはコメント欄へ`,
   },
 );
 

@@ -111,69 +111,51 @@ export function resolvePrintItemName(line: OrderLineForPrint): string {
   return line.part?.name?.trim() || "—";
 }
 
-/** 画面入力：明細を追加 */
-export const LINE_DETAIL_APPEND_CHARS_PER_LINE = 21;
-/** 画面入力：明細の編集 */
-export const LINE_DETAIL_EDIT_CHARS_PER_LINE = 20;
-/** 画面入力：共通 */
-export const LINE_DETAIL_INPUT_MAX_LINES = 3;
-export const LINE_DETAIL_INPUT_MAX_CHARS = 50;
+/** 運用FAX・画面入力・印刷：すべて 25字×2行 */
+export const LINE_DETAIL_CHARS_PER_LINE = 25;
+export const LINE_DETAIL_MAX_LINES = 2;
+export const LINE_DETAIL_MAX_CHARS = LINE_DETAIL_CHARS_PER_LINE * LINE_DETAIL_MAX_LINES;
 
-/** 運用FAX：アルファベット大文字25字×2行 */
-export const LINE_DETAIL_PRINT_CHARS_PER_LINE = 25;
-export const LINE_DETAIL_PRINT_MAX_LINES = 2;
+/** @deprecated */
+export const LINE_DETAIL_INPUT_MAX_LINES = LINE_DETAIL_MAX_LINES;
+/** @deprecated */
+export const LINE_DETAIL_INPUT_MAX_CHARS = LINE_DETAIL_MAX_CHARS;
+/** @deprecated */
+export const LINE_DETAIL_PRINT_CHARS_PER_LINE = LINE_DETAIL_CHARS_PER_LINE;
+/** @deprecated */
+export const LINE_DETAIL_PRINT_MAX_LINES = LINE_DETAIL_MAX_LINES;
+/** @deprecated */
+export const PRINT_DETAIL_MAX_CHARS = LINE_DETAIL_MAX_CHARS;
 
-export type LineDetailInputMode = "append" | "edit";
+export const printDetailInputClassName = "print-detail-input text-sm";
 
-export const printDetailInputClassName = "print-detail-input";
+export const printDetailFieldHint = `FAX「詳細」と同じ${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（合計${LINE_DETAIL_MAX_CHARS}字）です。入りきらない場合は注文書下部のコメント欄へ。「更新（印刷に反映）」で保存されます。`;
 
-export function printDetailInputModeClass(mode: LineDetailInputMode): string {
-  return mode === "append" ? "print-detail-input--append" : "print-detail-input--edit";
-}
-
-export function getPrintDetailFieldHint(mode: LineDetailInputMode): string {
-  const perLine = mode === "append" ? LINE_DETAIL_APPEND_CHARS_PER_LINE : LINE_DETAIL_EDIT_CHARS_PER_LINE;
-  return `FAX「詳細」は印刷時${LINE_DETAIL_PRINT_CHARS_PER_LINE}字×${LINE_DETAIL_PRINT_MAX_LINES}行（目安）。入力は${perLine}字で折り返し・${LINE_DETAIL_INPUT_MAX_LINES}行・合計${LINE_DETAIL_INPUT_MAX_CHARS}字まで。超える分はコメント欄へ。「更新（印刷に反映）」で保存。`;
-}
-
-/** @deprecated use LINE_DETAIL_INPUT_MAX_CHARS */
-export const PRINT_DETAIL_MAX_CHARS = LINE_DETAIL_INPUT_MAX_CHARS;
-
-/** 入力・保存用：最大3行・50文字まで */
+/** 入力・保存用：最大2行・50文字まで */
 export function sanitizeLineDetailInput(raw: string): string {
   const normalized = raw.replace(/\r\n/g, "\n");
-  const lines = normalized.split("\n").slice(0, LINE_DETAIL_INPUT_MAX_LINES);
+  const lines = normalized.split("\n").slice(0, LINE_DETAIL_MAX_LINES);
   const joined = lines.join("\n");
   const chars = [...joined];
-  if (chars.length <= LINE_DETAIL_INPUT_MAX_CHARS) return joined;
-  return chars.slice(0, LINE_DETAIL_INPUT_MAX_CHARS).join("");
+  if (chars.length <= LINE_DETAIL_MAX_CHARS) return joined;
+  return chars.slice(0, LINE_DETAIL_MAX_CHARS).join("");
 }
 
-/**
- * 印刷表示用：25字で区切り、続きがある行末に「…」（最大2行）
- */
+/** 印刷表示用：25字×2行、超過時は2行目末に「…」 */
 export function formatPrintLineDetail(text: string): string {
   const flat = text.trim().replace(/\r\n/g, "").replace(/\n/g, "");
   if (!flat) return "";
 
   const chars = [...flat];
-  const lines: string[] = [];
-  let pos = 0;
+  const line1 = chars.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+  if (chars.length <= LINE_DETAIL_CHARS_PER_LINE) return line1;
 
-  for (let i = 0; i < LINE_DETAIL_PRINT_MAX_LINES && pos < chars.length; i++) {
-    const chunk = chars.slice(pos, pos + LINE_DETAIL_PRINT_CHARS_PER_LINE);
-    pos += chunk.length;
-    let line = chunk.join("");
-    if (pos < chars.length) line += "…";
-    lines.push(line);
-  }
-
-  return lines.join("\n");
+  const line2 = chars.slice(LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS).join("");
+  if (chars.length <= LINE_DETAIL_MAX_CHARS) return `${line1}\n${line2}`;
+  return `${line1}\n${line2}…`;
 }
 
-/**
- * @deprecated 印刷は formatPrintLineDetail を使用
- */
+/** @deprecated */
 export function softWrapPrintDetail(text: string): string {
   return formatPrintLineDetail(text);
 }

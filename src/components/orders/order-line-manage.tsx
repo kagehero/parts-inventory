@@ -113,12 +113,7 @@ export function OrderLineManage({
         };
 
   return (
-    <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-3">
-      <p className="mb-2 text-xs font-semibold text-foreground">明細の編集</p>
-      <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
-        「詳細」は印刷の詳細欄に出ます。入力後は<strong className="font-semibold text-foreground">「更新（印刷に反映）」</strong>
-        を押してください（「保存」ボタンはありません）。社内メモは印刷されません。
-      </p>
+    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
@@ -148,25 +143,22 @@ export function OrderLineManage({
           });
         }}
       >
-        <div className="grid gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-          <PrintDetailField
-            id={`line-detail-${lineId}`}
-            mode="edit"
-            value={lineDetail}
-            onChange={setLineDetail}
+        <PrintDetailField
+          id={`line-detail-${lineId}`}
+          value={lineDetail}
+          onChange={setLineDetail}
+        />
+        <div className="grid gap-1">
+          <Label htmlFor={`end-customer-${lineId}`} className="text-sm font-normal">
+            お客様名（仕切単価の右・印刷用）
+          </Label>
+          <Input
+            id={`end-customer-${lineId}`}
+            className="text-sm"
+            value={endCustomerName}
+            onChange={(e) => setEndCustomerName(e.target.value)}
+            placeholder="例：花園"
           />
-          <div className="grid gap-1">
-            <Label htmlFor={`end-customer-${lineId}`} className="text-xs font-normal">
-              お客様名（仕切単価の右・印刷用）
-            </Label>
-            <Input
-              id={`end-customer-${lineId}`}
-              className="h-8 text-xs"
-              value={endCustomerName}
-              onChange={(e) => setEndCustomerName(e.target.value)}
-              placeholder="例：花園"
-            />
-          </div>
         </div>
 
         {lineSource === "FREE_TEXT" ? (

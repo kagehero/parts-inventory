@@ -114,30 +114,6 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
           });
         }}
       >
-        <div className="grid gap-3 rounded-md border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <PrintDetailField
-              id="lineDetailAppend"
-              name="lineDetail"
-              mode="append"
-              value={lineDetail}
-              onChange={setLineDetail}
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
-              お客様名（仕切単価の右・印刷用）
-            </Label>
-            <Input
-              id="endCustomerAppend"
-              name="endCustomerName"
-              value={endCustomerName}
-              onChange={(e) => setEndCustomerName(e.target.value)}
-              placeholder="例：花園"
-            />
-          </div>
-        </div>
-
         {mode === "MASTER" ? (
           <>
             <div className="grid gap-1">
@@ -156,6 +132,26 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
             </div>
 
             {selectedPart ? (
+              <div className="grid gap-3 rounded-md border border-primary/20 bg-primary/5 p-3">
+                <p className="text-sm font-medium text-foreground">{selectedPart.name}</p>
+                <PrintDetailField
+                  id="lineDetailAppend"
+                  name="lineDetail"
+                  value={lineDetail}
+                  onChange={setLineDetail}
+                />
+                <div className="grid gap-1">
+                  <Label htmlFor="endCustomerAppend" className="text-xs text-muted-foreground font-normal">
+                    お客様名（仕切単価の右・印刷用）
+                  </Label>
+                  <Input
+                    id="endCustomerAppend"
+                    name="endCustomerName"
+                    value={endCustomerName}
+                    onChange={(e) => setEndCustomerName(e.target.value)}
+                    placeholder="例：花園"
+                  />
+                </div>
               <div className="grid gap-2 rounded border border-dashed border-border/70 bg-muted/10 p-2">
                 <Label htmlFor="append-partno-mode" className="text-xs font-normal">
                   印刷用品番
@@ -192,6 +188,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                   </p>
                 ) : null}
               </div>
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground">
                 部品名・品番で検索して選択してください。マスタが空の場合は「直接入力」に切り替えてください。
@@ -199,7 +196,7 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
             )}
           </>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-md border border-primary/20 bg-primary/5 p-3 sm:grid-cols-2">
             <div className="grid gap-1 sm:col-span-2">
               <Label
                 htmlFor="freeItemName-append"
@@ -209,6 +206,26 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                 品名
               </Label>
               <Input id="freeItemName-append" name="freeItemName" required={mode === "FREE_TEXT"} placeholder="例：Vベルト A-52" />
+            </div>
+            <div className="sm:col-span-2">
+              <PrintDetailField
+                id="lineDetailAppend"
+                name="lineDetail"
+                value={lineDetail}
+                onChange={setLineDetail}
+              />
+            </div>
+            <div className="grid gap-1 sm:col-span-2">
+              <Label htmlFor="endCustomerAppendFree" className="text-xs text-muted-foreground font-normal">
+                お客様名（仕切単価の右・印刷用）
+              </Label>
+              <Input
+                id="endCustomerAppendFree"
+                name="endCustomerName"
+                value={endCustomerName}
+                onChange={(e) => setEndCustomerName(e.target.value)}
+                placeholder="例：花園"
+              />
             </div>
             <div className="grid gap-1">
               <Label className="text-xs text-muted-foreground">品番（不明なら空欄）</Label>
