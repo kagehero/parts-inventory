@@ -141,18 +141,39 @@ export function sanitizeLineDetailInput(raw: string): string {
   return chars.slice(0, LINE_DETAIL_MAX_CHARS).join("");
 }
 
-/** 印刷表示用：25字×2行、超過時は2行目末に「…」 */
+/** 印刷表示用：25字×2行。入力の改行を維持し、超過時は末行に「…」 */
 export function formatPrintLineDetail(text: string): string {
-  const flat = text.trim().replace(/\r\n/g, "").replace(/\n/g, "");
-  if (!flat) return "";
+  const normalized = text.trim().replace(/\r\n/g, "\n");
+  if (!normalized) return "";
 
-  const chars = [...flat];
-  const line1 = chars.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
-  if (chars.length <= LINE_DETAIL_CHARS_PER_LINE) return line1;
+  const userLines = normalized.split("\n").slice(0, LINE_DETAIL_MAX_LINES);
+  const output: string[] = [];
+  let charCount = 0;
 
-  const line2 = chars.slice(LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS).join("");
-  if (chars.length <= LINE_DETAIL_MAX_CHARS) return `${line1}\n${line2}`;
-  return `${line1}\n${line2}…`;
+  for (const userLine of userLines) {
+    if (output.length >= LINE_DETAIL_MAX_LINES || charCount >= LINE_DETAIL_MAX_CHARS) break;
+    const remaining = LINE_DETAIL_MAX_CHARS - charCount;
+    const lineChars = [...userLine].slice(0, Math.min(LINE_DETAIL_CHARS_PER_LINE, remaining));
+    charCount += lineChars.length;
+    output.push(lineChars.join(""));
+  }
+
+  if (output.length === 0) return "";
+
+  if (userLines.length === 1 && [...userLines[0]!].length > LINE_DETAIL_CHARS_PER_LINE) {
+    const chars = [...userLines[0]!];
+    const line1 = chars.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+    const line2 = chars.slice(LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS).join("");
+    if (!line2) return line1;
+    const truncated = chars.length > LINE_DETAIL_MAX_CHARS;
+    return truncated ? `${line1}\n${line2}…` : `${line1}\n${line2}`;
+  }
+
+  const flatLen = [...normalized.replace(/\n/g, "")].length;
+  if (flatLen > LINE_DETAIL_MAX_CHARS) {
+    output[output.length - 1] = `${output[output.length - 1]!}…`;
+  }
+  return output.join("\n");
 }
 
 /** @deprecated */

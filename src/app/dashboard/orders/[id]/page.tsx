@@ -170,11 +170,10 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
                   : (line.part?.name ?? "—");
               const subParts: string[] = [];
               if (line.lineSource === "FREE_TEXT") {
-                subParts.push(...[line.freePartNo, line.machineModel, line.machineUnitNo, line.machineEngineNo].filter(Boolean) as string[]);
+                if (line.freePartNo?.trim()) subParts.push(line.freePartNo.trim());
               } else {
                 subParts.push(`印刷品番: ${resolvePrintPartNo(line)}`);
               }
-              if (line.endCustomerName?.trim()) subParts.push(`お客様: ${line.endCustomerName.trim()}`);
               const sub =
                 line.lineSource === "FREE_TEXT" && subParts.length === 0
                   ? "品番・機体情報は注文書参照"
@@ -186,15 +185,30 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
                 <TableRow key={line.id}>
                   <TableCell>{orderLineStatusLabel[line.lineStatus]}</TableCell>
                   <TableCell className="align-top">
-                    <div className="font-medium">{labelName}</div>
-                    <div className="text-xs text-muted-foreground">{sub}</div>
+                    <div className="text-base font-semibold">{labelName}</div>
+                    {sub ? <div className="text-sm text-muted-foreground">{sub}</div> : null}
                     {lineNote ? (
                       <div className="text-xs text-muted-foreground">社内メモ：{lineNote}</div>
                     ) : null}
-                    {canModify && line.receivedQty === 0 ? (
-                      <div className="mt-3 max-w-xl">
+                  </TableCell>
+                  <TableCell className="text-right align-top">
+                    <div className="font-semibold">
+                      {line.orderedQty}/{line.receivedQty}
+                    </div>
+                    <div className="text-xs text-muted-foreground">残 {remaining}</div>
+                  </TableCell>
+                  <TableCell className="min-w-[280px] align-top">
+                    {!canModify ? (
+                      "—"
+                    ) : line.receivedQty > 0 ? (
+                      "—"
+                    ) : (
+                      <div className="space-y-3">
+                        {canReceiveLine ? (
+                          <ReceiveLineControl orderLineId={line.id} remaining={remaining} />
+                        ) : null}
                         {!line.partId ? (
-                          <p className="mb-2 text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             マスタ未連携行（FAX用・入荷は別途マスタ行で）
                           </p>
                         ) : null}
@@ -214,21 +228,6 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
                           aftermarketNo={line.part?.aftermarketNo ?? null}
                         />
                       </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="text-right align-top">
-                    <div className="font-semibold">
-                      {line.orderedQty}/{line.receivedQty}
-                    </div>
-                    <div className="text-xs text-muted-foreground">残 {remaining}</div>
-                  </TableCell>
-                  <TableCell className="min-w-[140px] align-top">
-                    {!canModify || line.receivedQty > 0 ? (
-                      "—"
-                    ) : canReceiveLine ? (
-                      <ReceiveLineControl orderLineId={line.id} remaining={remaining} />
-                    ) : (
-                      "—"
                     )}
                   </TableCell>
                 </TableRow>
