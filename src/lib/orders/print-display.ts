@@ -131,49 +131,46 @@ export const printDetailInputClassName = "print-detail-input text-sm";
 
 export const printDetailFieldHint = `FAX「詳細」と同じ${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（合計${LINE_DETAIL_MAX_CHARS}字）です。入りきらない場合は注文書下部のコメント欄へ。「更新（印刷に反映）」で保存されます。`;
 
-/** 入力・保存用：最大2行・50文字まで */
+/** 入力・保存用：最大2行・50文字（改行は字数に含めない） */
 export function sanitizeLineDetailInput(raw: string): string {
   const normalized = raw.replace(/\r\n/g, "\n");
   const lines = normalized.split("\n").slice(0, LINE_DETAIL_MAX_LINES);
-  const joined = lines.join("\n");
-  const chars = [...joined];
-  if (chars.length <= LINE_DETAIL_MAX_CHARS) return joined;
-  return chars.slice(0, LINE_DETAIL_MAX_CHARS).join("");
+  const trimmed: string[] = [];
+  let total = 0;
+
+  for (const line of lines) {
+    if (total >= LINE_DETAIL_MAX_CHARS) break;
+    const chars = [...line];
+    const take = Math.min(chars.length, LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS - total);
+    if (take <= 0) break;
+    trimmed.push(chars.slice(0, take).join(""));
+    total += take;
+  }
+
+  return trimmed.join("\n");
 }
 
-/** 印刷表示用：25字×2行。入力の改行を維持し、超過時は末行に「…」 */
+/** 印刷表示用：入力と同じ改行を維持。50字超のみ「…」 */
 export function formatPrintLineDetail(text: string): string {
-  const normalized = text.trim().replace(/\r\n/g, "\n");
-  if (!normalized) return "";
+  const sanitized = sanitizeLineDetailInput(text);
+  if (!sanitized) return "";
 
-  const userLines = normalized.split("\n").slice(0, LINE_DETAIL_MAX_LINES);
-  const output: string[] = [];
-  let charCount = 0;
+  const flat = [...sanitized.replace(/\n/g, "")];
+  const lines = sanitized.split("\n");
 
-  for (const userLine of userLines) {
-    if (output.length >= LINE_DETAIL_MAX_LINES || charCount >= LINE_DETAIL_MAX_CHARS) break;
-    const remaining = LINE_DETAIL_MAX_CHARS - charCount;
-    const lineChars = [...userLine].slice(0, Math.min(LINE_DETAIL_CHARS_PER_LINE, remaining));
-    charCount += lineChars.length;
-    output.push(lineChars.join(""));
+  if (lines.length >= 2) {
+    const line1 = [...lines[0] ?? ""].slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+    const line2 = [...lines[1] ?? ""].slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+    if (flat.length > LINE_DETAIL_MAX_CHARS) return `${line1}\n${line2}…`;
+    return line2 ? `${line1}\n${line2}` : line1;
   }
 
-  if (output.length === 0) return "";
+  if (flat.length <= LINE_DETAIL_CHARS_PER_LINE) return sanitized;
 
-  if (userLines.length === 1 && [...userLines[0]!].length > LINE_DETAIL_CHARS_PER_LINE) {
-    const chars = [...userLines[0]!];
-    const line1 = chars.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
-    const line2 = chars.slice(LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS).join("");
-    if (!line2) return line1;
-    const truncated = chars.length > LINE_DETAIL_MAX_CHARS;
-    return truncated ? `${line1}\n${line2}…` : `${line1}\n${line2}`;
-  }
-
-  const flatLen = [...normalized.replace(/\n/g, "")].length;
-  if (flatLen > LINE_DETAIL_MAX_CHARS) {
-    output[output.length - 1] = `${output[output.length - 1]!}…`;
-  }
-  return output.join("\n");
+  const line1 = flat.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+  const line2 = flat.slice(LINE_DETAIL_CHARS_PER_LINE, LINE_DETAIL_MAX_CHARS).join("");
+  if (flat.length <= LINE_DETAIL_MAX_CHARS) return `${line1}\n${line2}`;
+  return `${line1}\n${line2}…`;
 }
 
 /** @deprecated */

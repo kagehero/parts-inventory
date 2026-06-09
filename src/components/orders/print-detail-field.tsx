@@ -9,7 +9,7 @@ import {
   sanitizeLineDetailInput,
 } from "@/lib/orders/print-display";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 type PrintDetailFieldProps = {
   id: string;
@@ -40,15 +40,18 @@ export function PrintDetailField({
       <Label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </Label>
-      <Textarea
+      <textarea
         id={id}
         name={name}
         rows={2}
-        maxLength={LINE_DETAIL_MAX_CHARS}
-        className={printDetailInputClassName}
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
+        className={cn(
+          printDetailInputClassName,
+          "rounded-md border border-input bg-background shadow-sm transition-colors",
+          "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        )}
       />
       <p className="text-xs leading-relaxed text-muted-foreground">{printDetailFieldHint}</p>
     </div>
