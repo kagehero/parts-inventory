@@ -222,7 +222,8 @@ export function OrderHeaderEditForm({
           placeholder="注文書全体の特記事項、行の備考の続き、返信メモなど"
         />
         <p className="text-[11px] text-muted-foreground">
-          FAX印刷の下部「コメント」欄に表示されます。発注先からの返信内容を転記する場合もここに入力できます。
+          FAX印刷の下部「コメント」欄に表示されます。入力後は下の<strong className="font-semibold text-foreground">「ヘッダを保存」</strong>
+          を押してから印刷用表示を開いてください。
         </p>
       </div>
       <div className="rounded-md border border-dashed border-muted/80 bg-muted/20 p-3 space-y-2">
