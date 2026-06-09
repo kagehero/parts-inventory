@@ -227,21 +227,9 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                 placeholder="例：花園"
               />
             </div>
-            <div className="grid gap-1">
+            <div className="grid gap-1 sm:col-span-2">
               <Label className="text-xs text-muted-foreground">品番（不明なら空欄）</Label>
               <Input name="freePartNo" placeholder="OEM / 社外品番" />
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs text-muted-foreground">使用機 型式</Label>
-              <Input name="machineModel" placeholder="例：SM-720" />
-            </div>
-            <div className="grid gap-1">
-              <Label className="text-xs text-muted-foreground">号機</Label>
-              <Input name="machineUnitNo" placeholder="例：001" />
-            </div>
-            <div className="grid gap-1 sm:col-span-2">
-              <Label className="text-xs text-muted-foreground">エンジン No.</Label>
-              <Input name="machineEngineNo" placeholder="任意" />
             </div>
           </div>
         )}

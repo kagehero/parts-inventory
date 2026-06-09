@@ -8,7 +8,7 @@ import {
 } from "@/lib/orders/print-display";
 
 const zLineDetailOptional = zOptionalTrimmedEmptyToUndef.refine(
-  (v) => v === undefined || [...v].length <= LINE_DETAIL_MAX_CHARS,
+  (v) => v === undefined || [...v.replace(/\n/g, "")].length <= LINE_DETAIL_MAX_CHARS,
   {
     message: `詳細は${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（${LINE_DETAIL_MAX_CHARS}字）までです。続きはコメント欄へ`,
   },
