@@ -97,9 +97,6 @@ export function PartPicker({
       }
       const rows = res.data ?? [];
       setResults(rows);
-      if (!value && rows[0] && query.trim() === "") {
-        applySelection(rows[0]);
-      }
     }, 220);
 
     return () => {
