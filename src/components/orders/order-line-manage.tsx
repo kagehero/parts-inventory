@@ -6,6 +6,7 @@ import type { OrderLinePrintPartNoMode, OrderLineSource } from "@prisma/client";
 
 import { deleteOrderLine, updateOrderLine } from "@/features/orders/actions";
 import { PrintDetailField } from "@/components/orders/print-detail-field";
+import { blockEnterFormSubmit } from "@/lib/forms/prevent-enter-form-submit";
 import { printPartNoModeLabels, resolvePrintPartNo, sanitizeLineDetailInput } from "@/lib/orders/print-display";
 import { notifyActionResult } from "@/lib/toast-action";
 import { Button } from "@/components/ui/button";
@@ -112,36 +113,38 @@ export function OrderLineManage({
           },
         };
 
+  const saveLine = () => {
+    const fd = new FormData();
+    fd.set("orderLineId", lineId);
+    fd.set("orderedQty", String(qty));
+    fd.set("lineNote", note);
+    fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
+    fd.set("endCustomerName", endCustomerName);
+    fd.set("printPartNoMode", partNoMode);
+    if (lineSource === "FREE_TEXT") {
+      fd.set("freePartNo", freePartNo);
+      fd.set("freeItemName", freeItemName);
+    } else if (partNoMode === "CUSTOM") {
+      fd.set("printPartNoOverride", partNoOverride);
+    }
+    startTransition(async () => {
+      setMessage(null);
+      const res = await updateOrderLine(fd);
+      notifyActionResult(res, "明細を更新しました（印刷用表示にも反映されます）");
+      if (!res.ok) {
+        setMessage(res.message);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
       <form
         className="flex flex-col gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData();
-          fd.set("orderLineId", lineId);
-          fd.set("orderedQty", String(qty));
-          fd.set("lineNote", note);
-          fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
-          fd.set("endCustomerName", endCustomerName);
-          fd.set("printPartNoMode", partNoMode);
-          if (lineSource === "FREE_TEXT") {
-            fd.set("freePartNo", freePartNo);
-            fd.set("freeItemName", freeItemName);
-          } else if (partNoMode === "CUSTOM") {
-            fd.set("printPartNoOverride", partNoOverride);
-          }
-          startTransition(async () => {
-            setMessage(null);
-            const res = await updateOrderLine(fd);
-            notifyActionResult(res, "明細を更新しました（印刷用表示にも反映されます）");
-            if (!res.ok) {
-              setMessage(res.message);
-              return;
-            }
-            router.refresh();
-          });
-        }}
+        onSubmit={(e) => e.preventDefault()}
+        onKeyDown={blockEnterFormSubmit}
       >
         <PrintDetailField
           id={`line-detail-${lineId}`}
@@ -239,7 +242,7 @@ export function OrderLineManage({
               onChange={(e) => setQty(Number(e.target.value))}
             />
           </div>
-          <Button type="submit" size="sm" variant="default" disabled={pending}>
+          <Button type="button" size="sm" variant="default" disabled={pending} onClick={saveLine}>
             {pending ? "保存中…" : "更新（印刷に反映）"}
           </Button>
         </div>

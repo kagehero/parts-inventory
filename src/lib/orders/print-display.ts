@@ -128,8 +128,64 @@ export const LINE_DETAIL_PRINT_MAX_LINES = LINE_DETAIL_MAX_LINES;
 export const PRINT_DETAIL_MAX_CHARS = LINE_DETAIL_MAX_CHARS;
 
 export const printDetailInputClassName = "print-detail-input text-sm";
+export const printDetailLineInputClassName =
+  "print-detail-line-input h-9 rounded-md border border-input bg-background px-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
-export const printDetailFieldHint = `FAX「詳細」と同じ${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（合計${LINE_DETAIL_MAX_CHARS}字）です。入りきらない場合は注文書下部のコメント欄へ。「更新（印刷に反映）」で保存されます。`;
+export const printDetailFieldHint = `FAX「詳細」と同じ${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（合計${LINE_DETAIL_MAX_CHARS}字）です。1行目が25字に達したら、下の「2行目」欄をクリックするか、1行目でEnterを押してください。入りきらない場合はコメント欄へ。`;
+
+/** 1行分だけ25字に切り詰め */
+export function sanitizeLineDetailLine(raw: string): string {
+  return [...raw].slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+}
+
+/** 保存値を1行目・2行目に分割（改行なしの長文も25字で折り分け） */
+export function splitLineDetailLines(text: string): [string, string] {
+  const normalized = text.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return ["", ""];
+
+  if (normalized.includes("\n")) {
+    const parts = normalized.split("\n").slice(0, LINE_DETAIL_MAX_LINES);
+    return [sanitizeLineDetailLine(parts[0] ?? ""), sanitizeLineDetailLine(parts[1] ?? "")];
+  }
+
+  const flat = [...normalized].slice(0, LINE_DETAIL_MAX_CHARS);
+  return [
+    flat.slice(0, LINE_DETAIL_CHARS_PER_LINE).join(""),
+    flat.slice(LINE_DETAIL_CHARS_PER_LINE).join(""),
+  ];
+}
+
+/** 1行目・2行目を結合（合計50字・改行は字数に含めない） */
+export function joinLineDetailLines(line1: string, line2: string): string {
+  const l1 = sanitizeLineDetailLine(line1);
+  const l2 = sanitizeLineDetailLine(line2);
+  if (!l2) return l1;
+  const maxLine2 = Math.max(0, LINE_DETAIL_MAX_CHARS - [...l1].length);
+  const l2Trimmed = [...l2].slice(0, maxLine2).join("");
+  return l2Trimmed ? `${l1}\n${l2Trimmed}` : l1;
+}
+
+export type LineDetailStats = {
+  used: number;
+  remaining: number;
+  line1Len: number;
+  line2Len: number;
+  isFull: boolean;
+};
+
+export function getLineDetailStats(text: string): LineDetailStats {
+  const [line1, line2] = splitLineDetailLines(text);
+  const line1Len = [...line1].length;
+  const line2Len = [...line2].length;
+  const used = line1Len + line2Len;
+  return {
+    used,
+    remaining: Math.max(0, LINE_DETAIL_MAX_CHARS - used),
+    line1Len,
+    line2Len,
+    isFull: used >= LINE_DETAIL_MAX_CHARS,
+  };
+}
 
 /** 入力・保存用：最大2行・50文字（改行は字数に含めない） */
 export function sanitizeLineDetailInput(raw: string): string {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { useRef, useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrderLinePrintPartNoMode } from "@prisma/client";
 
@@ -9,6 +9,7 @@ import type { PartPickerRow } from "@/server/services/parts.service";
 import { PartPicker } from "@/components/parts/part-picker";
 import { OrderReferenceLinks } from "@/components/orders/order-reference-links";
 import { PrintDetailField } from "@/components/orders/print-detail-field";
+import { blockEnterFormSubmit } from "@/lib/forms/prevent-enter-form-submit";
 import { printPartNoModeLabels, resolvePrintPartNo, sanitizeLineDetailInput } from "@/lib/orders/print-display";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function AppendOrderLineForm({ orderId }: { orderId: string }) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [mode, setMode] = useState<"MASTER" | "FREE_TEXT">("MASTER");
@@ -52,6 +54,41 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
 
   const masterReady = mode !== "MASTER" || !!partId;
 
+  const appendLine = (form: HTMLFormElement) => {
+    const fd = new FormData(form);
+    fd.delete("partId");
+    fd.set("orderId", orderId);
+    fd.set("lineMode", mode);
+    if (mode === "MASTER") {
+      fd.set("partId", partId.trim());
+      fd.set("printPartNoMode", partNoMode);
+      if (partNoMode === "CUSTOM") {
+        fd.set("printPartNoOverride", partNoOverride);
+      }
+    }
+    fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
+    fd.set("endCustomerName", endCustomerName.trim());
+    const lineNoteVal = fd.get("lineNote");
+    if (typeof lineNoteVal === "string") {
+      fd.set("lineNote", lineNoteVal.trim());
+    }
+    startTransition(async () => {
+      setMessage(null);
+      const result = await appendOrderLine(fd);
+      if (!result.ok) {
+        setMessage(result.message);
+        return;
+      }
+      form.reset();
+      setQty(1);
+      setPartNoMode("AUTO_AFTERMARKET");
+      setPartNoOverride("");
+      setLineDetail("");
+      setEndCustomerName("");
+      router.refresh();
+    });
+  };
+
   return (
     <div className="grid gap-4 md:max-w-2xl">
       <OrderReferenceLinks />
@@ -75,44 +112,11 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
       </div>
 
       <form
+        ref={formRef}
         key={mode}
         className="grid gap-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const form = e.currentTarget;
-          const fd = new FormData(form);
-          fd.delete("partId");
-          fd.set("orderId", orderId);
-          fd.set("lineMode", mode);
-          if (mode === "MASTER") {
-            fd.set("partId", partId.trim());
-            fd.set("printPartNoMode", partNoMode);
-            if (partNoMode === "CUSTOM") {
-              fd.set("printPartNoOverride", partNoOverride);
-            }
-          }
-          fd.set("lineDetail", sanitizeLineDetailInput(lineDetail));
-          fd.set("endCustomerName", endCustomerName.trim());
-          const lineNoteVal = fd.get("lineNote");
-          if (typeof lineNoteVal === "string") {
-            fd.set("lineNote", lineNoteVal.trim());
-          }
-          startTransition(async () => {
-            setMessage(null);
-            const result = await appendOrderLine(fd);
-            if (!result.ok) {
-              setMessage(result.message);
-              return;
-            }
-            form.reset();
-            setQty(1);
-            setPartNoMode("AUTO_AFTERMARKET");
-            setPartNoOverride("");
-            setLineDetail("");
-            setEndCustomerName("");
-            router.refresh();
-          });
-        }}
+        onSubmit={(e) => e.preventDefault()}
+        onKeyDown={blockEnterFormSubmit}
       >
         {mode === "MASTER" ? (
           <>
@@ -257,7 +261,13 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               onChange={(e) => setQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
             />
           </div>
-          <Button type="submit" disabled={pending || !masterReady}>
+          <Button
+            type="button"
+            disabled={pending || !masterReady}
+            onClick={() => {
+              if (formRef.current) appendLine(formRef.current);
+            }}
+          >
             {pending ? "処理中..." : "行を追加"}
           </Button>
         </div>
