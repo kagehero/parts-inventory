@@ -39,8 +39,16 @@ export function PrintDetailField({
   const stats = useMemo(() => getLineDetailStats(value), [value]);
   const showLine2Hint = stats.line1Len >= LINE_DETAIL_CHARS_PER_LINE && stats.line2Len === 0;
 
-  const scheduleFocusLine2 = useCallback(() => {
-    pendingFocusLine2.current = true;
+  const focusLine2 = useCallback(() => {
+    const el = line2Ref.current;
+    if (!el) {
+      pendingFocusLine2.current = true;
+      return;
+    }
+    el.focus();
+    // 末尾にカーソルを置く
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
   }, []);
 
   useLayoutEffect(() => {
@@ -55,13 +63,17 @@ export function PrintDetailField({
 
   const handleLine1Change = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const nextLine1 = e.target.value;
-      onChange(joinLineDetailLines(nextLine1, line2));
-      if ([...sanitizeLineDetailLine(nextLine1)].length >= LINE_DETAIL_CHARS_PER_LINE) {
-        scheduleFocusLine2();
+      const typed = [...e.target.value];
+      const nextLine1 = typed.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
+      // 25字を超えた分は破棄せず2行目の先頭へ送る
+      const overflow = typed.slice(LINE_DETAIL_CHARS_PER_LINE).join("");
+      const nextLine2 = overflow ? sanitizeLineDetailLine(overflow + line2) : line2;
+      onChange(joinLineDetailLines(nextLine1, nextLine2));
+      if ([...nextLine1].length >= LINE_DETAIL_CHARS_PER_LINE) {
+        focusLine2();
       }
     },
-    [line2, onChange, scheduleFocusLine2],
+    [line2, onChange, focusLine2],
   );
 
   const handleLine1KeyDown = useCallback(
@@ -70,9 +82,9 @@ export function PrintDetailField({
       if (e.nativeEvent.isComposing || e.keyCode === 229) return;
       e.preventDefault();
       e.stopPropagation();
-      scheduleFocusLine2();
+      focusLine2();
     },
-    [scheduleFocusLine2],
+    [focusLine2],
   );
 
   const handleLine2Change = useCallback(
