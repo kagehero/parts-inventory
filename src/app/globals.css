@@ -389,6 +389,14 @@
   padding: 0.25rem 0.375rem !important;
 }
 
+.print-detail-line-input {
+  box-sizing: border-box;
+  width: 25ch !important;
+  min-width: 25ch !important;
+  max-width: 25ch !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 /* 印刷：品名・詳細・部品コード（line-clamp なし＝「…」を CSS で付けない） */
 .print-route .print-line-item-name-cell .print-cell-lines-2,
 .print-order-sheet .print-line-item-name-cell .print-cell-lines-2 {
