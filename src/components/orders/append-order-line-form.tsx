@@ -150,11 +150,11 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                   </Label>
                   <Input
                     id="endCustomerAppend"
-                    name="endCustomerName"
+                    name="endCustomerName_nofill"
                     value={endCustomerName}
                     onChange={(e) => setEndCustomerName(e.target.value)}
                     placeholder="例：花園"
-                    autoComplete="off"
+                    autoComplete="new-password"
                     autoCorrect="off"
                     data-1p-ignore
                     data-lpignore="true"
@@ -229,11 +229,11 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               </Label>
               <Input
                 id="endCustomerAppendFree"
-                name="endCustomerName"
+                name="endCustomerName_nofill"
                 value={endCustomerName}
                 onChange={(e) => setEndCustomerName(e.target.value)}
                 placeholder="例：花園"
-                autoComplete="off"
+                autoComplete="new-password"
                 autoCorrect="off"
                 data-1p-ignore
                 data-lpignore="true"
