@@ -154,6 +154,10 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                     value={endCustomerName}
                     onChange={(e) => setEndCustomerName(e.target.value)}
                     placeholder="例：花園"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    data-1p-ignore
+                    data-lpignore="true"
                   />
                 </div>
               <div className="grid gap-2 rounded border border-dashed border-border/70 bg-muted/10 p-2">
@@ -229,6 +233,10 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                 value={endCustomerName}
                 onChange={(e) => setEndCustomerName(e.target.value)}
                 placeholder="例：花園"
+                autoComplete="off"
+                autoCorrect="off"
+                data-1p-ignore
+                data-lpignore="true"
               />
             </div>
             <div className="grid gap-1 sm:col-span-2">
