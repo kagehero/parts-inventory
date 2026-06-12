@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 
 import {
@@ -40,6 +40,16 @@ export function PrintDetailField({
   const composingLine1 = useRef(false);
   const composingLine2 = useRef(false);
   const [line1, line2] = useMemo(() => splitLineDetailLines(value), [value]);
+  // controlled inputの値は確定済みstateから作るが、IME変換中はDOMの生テキストを尊重するため
+  // ローカルのドラフトを表示に使う。変換していないときだけpropsへ追従させる。
+  const [draft1, setDraft1] = useState(line1);
+  const [draft2, setDraft2] = useState(line2);
+  useEffect(() => {
+    if (!composingLine1.current) setDraft1(line1);
+  }, [line1]);
+  useEffect(() => {
+    if (!composingLine2.current) setDraft2(line2);
+  }, [line2]);
   const stats = useMemo(() => getLineDetailStats(value), [value]);
   const showLine2Hint = stats.line1Len >= LINE_DETAIL_CHARS_PER_LINE && stats.line2Len === 0;
 
@@ -82,7 +92,9 @@ export function PrintDetailField({
 
   const handleLine1Change = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      // 変換中はDOM側の生テキストを保持し、確定（compositionend）までstateを書き換えない
+      // 表示は常にDOMの生テキストへ追従させる（変換前の文字も画面に残す）
+      setDraft1(e.target.value);
+      // 変換中は親stateを書き換えない（確定＝compositionendまで待つ）
       if (composingLine1.current) return;
       commitLine1(e.target.value);
     },
@@ -96,8 +108,10 @@ export function PrintDetailField({
   const handleLine1CompositionEnd = useCallback(
     (e: React.CompositionEvent<HTMLInputElement>) => {
       composingLine1.current = false;
+      const raw = (e.target as HTMLInputElement).value;
+      setDraft1(raw);
       // 確定値で初めてstateへ反映（変換中の文字落ちを防ぐ）
-      commitLine1((e.target as HTMLInputElement).value);
+      commitLine1(raw);
     },
     [commitLine1],
   );
@@ -122,6 +136,7 @@ export function PrintDetailField({
 
   const handleLine2Change = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDraft2(e.target.value);
       if (composingLine2.current) return;
       commitLine2(e.target.value);
     },
@@ -135,7 +150,9 @@ export function PrintDetailField({
   const handleLine2CompositionEnd = useCallback(
     (e: React.CompositionEvent<HTMLInputElement>) => {
       composingLine2.current = false;
-      commitLine2((e.target as HTMLInputElement).value);
+      const raw = (e.target as HTMLInputElement).value;
+      setDraft2(raw);
+      commitLine2(raw);
     },
     [commitLine2],
   );
@@ -159,7 +176,7 @@ export function PrintDetailField({
           ref={line1Ref}
           id={`${id}-line1`}
           type="text"
-          value={line1}
+          value={draft1}
           onChange={handleLine1Change}
           onCompositionStart={handleLine1CompositionStart}
           onCompositionEnd={handleLine1CompositionEnd}
@@ -182,7 +199,7 @@ export function PrintDetailField({
           ref={line2Ref}
           id={`${id}-line2`}
           type="text"
-          value={line2}
+          value={draft2}
           onChange={handleLine2Change}
           onCompositionStart={handleLine2CompositionStart}
           onCompositionEnd={handleLine2CompositionEnd}

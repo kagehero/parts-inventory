@@ -161,7 +161,8 @@ export function OrderLineManage({
             value={endCustomerName}
             onChange={(e) => setEndCustomerName(e.target.value)}
             placeholder="例：花園"
-            autoComplete="off"
+            name="endCustomerName_nofill"
+            autoComplete="new-password"
             autoCorrect="off"
             data-1p-ignore
             data-lpignore="true"
