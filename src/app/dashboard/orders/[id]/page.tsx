@@ -138,8 +138,8 @@ export default async function OrderDetailPage(props: { params: ParamsPromise }) 
           />
         ) : null}
 
-        {canModify && order.lines.every((l) => l.receivedQty === 0) ? (
-          <CancelOrderButton orderId={order.id} />
+        {order.lines.every((l) => l.receivedQty === 0) ? (
+          <CancelOrderButton orderId={order.id} isCancelled={!canModify} />
         ) : null}
 
         <section className="space-y-3 rounded-lg border border-dashed border-muted px-4 py-4">

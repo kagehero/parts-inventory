@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import type React from "react";
 
 import {
   getLineDetailStats,
@@ -35,6 +36,9 @@ export function PrintDetailField({
   const line1Ref = useRef<HTMLInputElement>(null);
   const line2Ref = useRef<HTMLInputElement>(null);
   const pendingFocusLine2 = useRef(false);
+  // IME変換中は確定までonChangeで親stateを書き換えない（変換が中断され文字落ちするため）
+  const composingLine1 = useRef(false);
+  const composingLine2 = useRef(false);
   const [line1, line2] = useMemo(() => splitLineDetailLines(value), [value]);
   const stats = useMemo(() => getLineDetailStats(value), [value]);
   const showLine2Hint = stats.line1Len >= LINE_DETAIL_CHARS_PER_LINE && stats.line2Len === 0;
@@ -61,9 +65,9 @@ export function PrintDetailField({
     return () => window.clearTimeout(timer);
   }, [value, line1, line2]);
 
-  const handleLine1Change = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const typed = [...e.target.value];
+  const commitLine1 = useCallback(
+    (rawValue: string) => {
+      const typed = [...rawValue];
       const nextLine1 = typed.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
       // 25字を超えた分は破棄せず2行目の先頭へ送る
       const overflow = typed.slice(LINE_DETAIL_CHARS_PER_LINE).join("");
@@ -74,6 +78,28 @@ export function PrintDetailField({
       }
     },
     [line2, onChange, focusLine2],
+  );
+
+  const handleLine1Change = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // 変換中はDOM側の生テキストを保持し、確定（compositionend）までstateを書き換えない
+      if (composingLine1.current) return;
+      commitLine1(e.target.value);
+    },
+    [commitLine1],
+  );
+
+  const handleLine1CompositionStart = useCallback(() => {
+    composingLine1.current = true;
+  }, []);
+
+  const handleLine1CompositionEnd = useCallback(
+    (e: React.CompositionEvent<HTMLInputElement>) => {
+      composingLine1.current = false;
+      // 確定値で初めてstateへ反映（変換中の文字落ちを防ぐ）
+      commitLine1((e.target as HTMLInputElement).value);
+    },
+    [commitLine1],
   );
 
   const handleLine1KeyDown = useCallback(
@@ -87,11 +113,31 @@ export function PrintDetailField({
     [focusLine2],
   );
 
-  const handleLine2Change = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      onChange(joinLineDetailLines(line1, e.target.value));
+  const commitLine2 = useCallback(
+    (rawValue: string) => {
+      onChange(joinLineDetailLines(line1, rawValue));
     },
     [line1, onChange],
+  );
+
+  const handleLine2Change = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (composingLine2.current) return;
+      commitLine2(e.target.value);
+    },
+    [commitLine2],
+  );
+
+  const handleLine2CompositionStart = useCallback(() => {
+    composingLine2.current = true;
+  }, []);
+
+  const handleLine2CompositionEnd = useCallback(
+    (e: React.CompositionEvent<HTMLInputElement>) => {
+      composingLine2.current = false;
+      commitLine2((e.target as HTMLInputElement).value);
+    },
+    [commitLine2],
   );
 
   const handleLine2KeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -115,6 +161,8 @@ export function PrintDetailField({
           type="text"
           value={line1}
           onChange={handleLine1Change}
+          onCompositionStart={handleLine1CompositionStart}
+          onCompositionEnd={handleLine1CompositionEnd}
           onKeyDown={handleLine1KeyDown}
           placeholder={placeholder}
           className={cn(printDetailLineInputClassName, stats.line1Len >= LINE_DETAIL_CHARS_PER_LINE && "border-amber-500/70")}
@@ -136,6 +184,8 @@ export function PrintDetailField({
           type="text"
           value={line2}
           onChange={handleLine2Change}
+          onCompositionStart={handleLine2CompositionStart}
+          onCompositionEnd={handleLine2CompositionEnd}
           onKeyDown={handleLine2KeyDown}
           placeholder="例：註文済み数量１個へ変更"
           className={cn(printDetailLineInputClassName, stats.line2Len >= LINE_DETAIL_CHARS_PER_LINE && "border-amber-500/70")}

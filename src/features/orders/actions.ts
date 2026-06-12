@@ -147,6 +147,17 @@ export async function cancelOrder(orderId: string): Promise<ActionResult> {
   });
 }
 
+export async function deleteOrder(orderId: string): Promise<ActionResult> {
+  return guardAction(async () => {
+    await requireUser();
+    await OrdersService.deleteOrder(orderId);
+
+    revalidatePath("/dashboard/orders");
+    revalidatePath(`/dashboard/orders/${orderId}`);
+    revalidatePath(`/print/orders/${orderId}`);
+  });
+}
+
 export async function deleteOrderLine(formData: FormData): Promise<ActionResult> {
   return guardAction(async () => {
     await requireUser();

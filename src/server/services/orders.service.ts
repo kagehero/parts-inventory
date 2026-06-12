@@ -222,6 +222,21 @@ export async function cancelOrder(orderId: string): Promise<void> {
   });
 }
 
+/** 完全削除：入荷実績がない注文のみ。行・添付ごとDBから物理削除（取消＝論理削除とは別） */
+export async function deleteOrder(orderId: string): Promise<void> {
+  const ord = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { lines: true },
+  });
+
+  if (!ord) throw new ActionError("注文が見つかりません");
+  const hasRecv = ord.lines.some((l) => l.receivedQty > 0);
+  if (hasRecv) throw new ActionError("入荷実績がある注文は完全削除できません");
+
+  // 行・添付は onDelete: Cascade。入荷ゼロのため在庫ログ参照は無く安全に物理削除できる
+  await prisma.order.delete({ where: { id: orderId } });
+}
+
 export async function updateOrderHeader(input: {
   orderId: string;
   supplierId?: string | null;
