@@ -150,14 +150,11 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
                   </Label>
                   <Input
                     id="endCustomerAppend"
-                    name="endCustomerName_nofill"
+                    name="endCustomerName"
                     value={endCustomerName}
                     onChange={(e) => setEndCustomerName(e.target.value)}
                     placeholder="例：花園"
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    data-1p-ignore
-                    data-lpignore="true"
+                    autoComplete="on"
                   />
                 </div>
               <div className="grid gap-2 rounded border border-dashed border-border/70 bg-muted/10 p-2">
@@ -229,14 +226,11 @@ export function AppendOrderLineForm({ orderId }: { orderId: string }) {
               </Label>
               <Input
                 id="endCustomerAppendFree"
-                name="endCustomerName_nofill"
+                name="endCustomerName"
                 value={endCustomerName}
                 onChange={(e) => setEndCustomerName(e.target.value)}
                 placeholder="例：花園"
-                autoComplete="new-password"
-                autoCorrect="off"
-                data-1p-ignore
-                data-lpignore="true"
+                autoComplete="on"
               />
             </div>
             <div className="grid gap-1 sm:col-span-2">
