@@ -76,14 +76,16 @@ export function PrintDetailField({
   }, [value, line1, line2]);
 
   const commitLine1 = useCallback(
-    (rawValue: string) => {
+    // moveFocus: 25字に達したとき2行目へ移すか。入力途中（変換中・タイプ中）は移さない
+    (rawValue: string, moveFocus: boolean) => {
       const typed = [...rawValue];
       const nextLine1 = typed.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
       // 25字を超えた分は破棄せず2行目の先頭へ送る
       const overflow = typed.slice(LINE_DETAIL_CHARS_PER_LINE).join("");
       const nextLine2 = overflow ? sanitizeLineDetailLine(overflow + line2) : line2;
       onChange(joinLineDetailLines(nextLine1, nextLine2));
-      if ([...nextLine1].length >= LINE_DETAIL_CHARS_PER_LINE) {
+      // あふれた（overflowがある）ときだけ自動で2行目へ。25字ちょうどでは奪わない。
+      if (moveFocus && overflow) {
         focusLine2();
       }
     },
@@ -96,7 +98,8 @@ export function PrintDetailField({
       setDraft1(e.target.value);
       // 変換中は親stateを書き換えない（確定＝compositionendまで待つ）
       if (composingLine1.current) return;
-      commitLine1(e.target.value);
+      // タイプ中（change）はフォーカスを奪わない＝末尾の文字落ちを防ぐ
+      commitLine1(e.target.value, false);
     },
     [commitLine1],
   );
@@ -110,8 +113,9 @@ export function PrintDetailField({
       composingLine1.current = false;
       const raw = (e.target as HTMLInputElement).value;
       setDraft1(raw);
-      // 確定値で初めてstateへ反映（変換中の文字落ちを防ぐ）
-      commitLine1(raw);
+      // 確定値で初めてstateへ反映（変換中の文字落ちを防ぐ）。
+      // 確定後にあふれていれば2行目へ送ってからフォーカス移動して良い。
+      commitLine1(raw, true);
     },
     [commitLine1],
   );
