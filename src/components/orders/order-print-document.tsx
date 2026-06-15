@@ -70,47 +70,24 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
         <col style={{ width: "5%" }} />
         <col style={{ width: "15%" }} />
         <col style={{ width: "19%" }} />
-        <col style={{ width: "22%" }} />
+        <col style={{ width: "27%" }} />
         <col style={{ width: "5%" }} />
         <col style={{ width: "7.5%" }} />
         <col style={{ width: "7.5%" }} />
         <col style={{ width: "8%" }} />
-        <col style={{ width: "3.5%" }} />
-        <col style={{ width: "3.5%" }} />
+        <col style={{ width: "6%" }} />
       </colgroup>
       <thead>
         <tr>
-          <th className="border border-black text-center" rowSpan={2}>
-            No.
-          </th>
-          <th className="border border-black text-center" rowSpan={2}>
-            部品コード
-          </th>
-          <th className="border border-black text-left" rowSpan={2}>
-            品名(規格)
-          </th>
-          <th className="border border-black text-left" rowSpan={2}>
-            詳細
-          </th>
-          <th className="border border-black text-center" rowSpan={2}>
-            数量
-          </th>
-          <th className="border border-black text-center" rowSpan={2}>
-            定価
-          </th>
-          <th className="border border-black text-center" rowSpan={2}>
-            仕切単価
-          </th>
-          <th className="border border-black text-center" rowSpan={2}>
-            お客様名
-          </th>
-          <th className="print-delivery-col border border-black text-center" colSpan={2}>
-            納期
-          </th>
-        </tr>
-        <tr>
-          <th className="print-delivery-col border border-black text-center">月</th>
-          <th className="print-delivery-col border border-black text-center">日</th>
+          <th className="border border-black text-center">No.</th>
+          <th className="border border-black text-center">部品コード</th>
+          <th className="border border-black text-left">品名(規格)</th>
+          <th className="border border-black text-left">詳細</th>
+          <th className="border border-black text-center">数量</th>
+          <th className="border border-black text-center">定価</th>
+          <th className="border border-black text-center">仕切単価</th>
+          <th className="border border-black text-center">お客様名</th>
+          <th className="print-delivery-col border border-black text-center">納期(月/日)</th>
         </tr>
       </thead>
       <tbody>
@@ -128,7 +105,6 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
                 <td className="print-supplier-blank border border-black" />
                 <td className="print-supplier-blank border border-black" />
                 <td className="border border-black" />
-                <td className="print-supplier-blank print-delivery-col border border-black" />
                 <td className="print-supplier-blank print-delivery-col border border-black" />
               </tr>
             );
@@ -156,7 +132,6 @@ function PrintLinesTable({ lines, startIndex }: { lines: OrderLine[]; startIndex
               <td className="print-supplier-blank border border-black text-center">{PRINT_SUPPLIER_BLANK}</td>
               <td className="print-supplier-blank border border-black text-center">{PRINT_SUPPLIER_BLANK}</td>
               <td className="border border-black">{customer}</td>
-              <td className="print-supplier-blank print-delivery-col border border-black" />
               <td className="print-supplier-blank print-delivery-col border border-black" />
             </tr>
           );
