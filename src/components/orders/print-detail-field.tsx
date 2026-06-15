@@ -39,18 +39,33 @@ export function PrintDetailField({
   // IME変換中は確定までonChangeで親stateを書き換えない（変換が中断され文字落ちするため）
   const composingLine1 = useRef(false);
   const composingLine2 = useRef(false);
+  // Chromeはcompositionendがchangeより先に発火する。compositionendで確定commitした直後、
+  // 同じ生値でchangeが再commitすると、line2クロージャが古いまま走りあふれ分を二重適用して
+  // 直前の確定結果を壊す。compositionendで確定した生値を覚えておき、直後に同じ値のchangeが
+  // 来たら再commitを抑止する（値で判定するのでChrome以外の発火順でも誤爆しない）。
+  const lastCompositionEndValueLine1 = useRef<string | null>(null);
   const [line1, line2] = useMemo(() => splitLineDetailLines(value), [value]);
   // controlled inputの値は確定済みstateから作るが、IME変換中はDOMの生テキストを尊重するため
   // ローカルのドラフトを表示に使う。変換していないときだけpropsへ追従させる。
   const [draft1, setDraft1] = useState(line1);
   const [draft2, setDraft2] = useState(line2);
+  // commit時に参照すべきは「いま画面に見えている内容（draft）」であって、非同期に遅れて届く
+  // value由来のline1/line2クロージャではない。refで常に最新のdraftを読めるようにし、
+  // 連続入力・あふれ送り時の取りこぼし・ズレを防ぐ。
+  const draft1Ref = useRef(draft1);
+  draft1Ref.current = draft1;
+  const draft2Ref = useRef(draft2);
+  draft2Ref.current = draft2;
   useEffect(() => {
     if (!composingLine1.current) setDraft1(line1);
   }, [line1]);
   useEffect(() => {
     if (!composingLine2.current) setDraft2(line2);
   }, [line2]);
-  const stats = useMemo(() => getLineDetailStats(value), [value]);
+  // カウンタは「いま入力欄に見えている文字（draft）」から数える。
+  // valueから数えると、IME変換中・あふれ処理中に表示と数がズレて「25/25」なのに
+  // 実際は21字…のような嘘表示になる。表示と数は必ず同じソースから出す。
+  const stats = useMemo(() => getLineDetailStats(joinLineDetailLines(draft1, draft2)), [draft1, draft2]);
   const showLine2Hint = stats.line1Len >= LINE_DETAIL_CHARS_PER_LINE && stats.line2Len === 0;
 
   const focusLine2 = useCallback(() => {
@@ -78,11 +93,13 @@ export function PrintDetailField({
   const commitLine1 = useCallback(
     // moveFocus: 25字に達したとき2行目へ移すか。入力途中（変換中・タイプ中）は移さない
     (rawValue: string, moveFocus: boolean) => {
+      // 既存の2行目は「いま画面に見えている内容（draft2）」を真とする。
+      const currentLine2 = draft2Ref.current;
       const typed = [...rawValue];
       const nextLine1 = typed.slice(0, LINE_DETAIL_CHARS_PER_LINE).join("");
       // 25字を超えた分は破棄せず2行目の先頭へ送る
       const overflow = typed.slice(LINE_DETAIL_CHARS_PER_LINE).join("");
-      const nextLine2 = overflow ? sanitizeLineDetailLine(overflow + line2) : line2;
+      const nextLine2 = overflow ? sanitizeLineDetailLine(overflow + currentLine2) : currentLine2;
       // 表示（draft）も即同期する。useEffectの非同期同期に頼ると、連続入力時に
       // commitLine1のline2クロージャが古いまま再実行され、あふれた文字が落ちる。
       setDraft1(nextLine1);
@@ -93,7 +110,7 @@ export function PrintDetailField({
         focusLine2();
       }
     },
-    [line2, onChange, focusLine2],
+    [onChange, focusLine2],
   );
 
   const handleLine1Change = useCallback(
@@ -102,6 +119,14 @@ export function PrintDetailField({
       setDraft1(e.target.value);
       // 変換中は親stateを書き換えない（確定＝compositionendまで待つ）
       if (composingLine1.current) return;
+      // compositionend直後にChromeが投げてくるchange（＝同じ確定値）はcompositionendで反映済み。
+      // ここで再commitすると古いline2クロージャであふれ分を二重適用してしまうのでスキップ。
+      if (lastCompositionEndValueLine1.current === e.target.value) {
+        lastCompositionEndValueLine1.current = null;
+        return;
+      }
+      // 確定値と違う通常タイプが来たら抑止フラグは無効化する。
+      lastCompositionEndValueLine1.current = null;
       // タイプ中（change）はフォーカスを奪わない＝末尾の文字落ちを防ぐ
       commitLine1(e.target.value, false);
     },
@@ -116,6 +141,8 @@ export function PrintDetailField({
     (e: React.CompositionEvent<HTMLInputElement>) => {
       composingLine1.current = false;
       const raw = (e.target as HTMLInputElement).value;
+      // 直後にChromeが投げる同値changeのcommitを抑止する目印（値で判定）。
+      lastCompositionEndValueLine1.current = raw;
       setDraft1(raw);
       // 確定値で初めてstateへ反映（変換中の文字落ちを防ぐ）。
       // 確定後にあふれていれば2行目へ送ってからフォーカス移動して良い。
@@ -137,9 +164,10 @@ export function PrintDetailField({
 
   const commitLine2 = useCallback(
     (rawValue: string) => {
-      onChange(joinLineDetailLines(line1, rawValue));
+      // 1行目も「いま画面に見えている内容（draft1）」を真とする。
+      onChange(joinLineDetailLines(draft1Ref.current, rawValue));
     },
-    [line1, onChange],
+    [onChange],
   );
 
   const handleLine2Change = useCallback(
