@@ -129,7 +129,7 @@ export const PRINT_DETAIL_MAX_CHARS = LINE_DETAIL_MAX_CHARS;
 
 export const printDetailInputClassName = "print-detail-input text-sm";
 export const printDetailLineInputClassName =
-  "print-detail-line-input h-9 rounded-md border border-input bg-background px-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "print-detail-line-input h-9 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export const printDetailFieldHint = `FAX「詳細」と同じ${LINE_DETAIL_CHARS_PER_LINE}字×${LINE_DETAIL_MAX_LINES}行（合計${LINE_DETAIL_MAX_CHARS}字）です。1行目が25字に達したら、下の「2行目」欄をクリックするか、1行目でEnterを押してください。入りきらない場合はコメント欄へ。`;
 
