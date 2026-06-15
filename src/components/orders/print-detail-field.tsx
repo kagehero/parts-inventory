@@ -83,6 +83,10 @@ export function PrintDetailField({
       // 25字を超えた分は破棄せず2行目の先頭へ送る
       const overflow = typed.slice(LINE_DETAIL_CHARS_PER_LINE).join("");
       const nextLine2 = overflow ? sanitizeLineDetailLine(overflow + line2) : line2;
+      // 表示（draft）も即同期する。useEffectの非同期同期に頼ると、連続入力時に
+      // commitLine1のline2クロージャが古いまま再実行され、あふれた文字が落ちる。
+      setDraft1(nextLine1);
+      if (overflow) setDraft2(nextLine2);
       onChange(joinLineDetailLines(nextLine1, nextLine2));
       // あふれた（overflowがある）ときだけ自動で2行目へ。25字ちょうどでは奪わない。
       if (moveFocus && overflow) {
