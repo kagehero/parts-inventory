@@ -94,6 +94,10 @@ export function PartForm({ part, embedded, onSaved, onCancel }: Props) {
           placeholder="例: XX-710 / XX-730"
         />
       </div>
+      <div className="md:col-span-2 grid gap-2">
+        <Label htmlFor="note">備考</Label>
+        <Input id="note" name="note" defaultValue={part?.note ?? ""} />
+      </div>
       {editing ? (
         <div className="grid gap-2 md:col-span-2 rounded-md border border-border/60 bg-muted/20 px-3 py-3">
           <Label className="text-muted-foreground">現在庫（参照）</Label>

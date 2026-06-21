@@ -26,6 +26,7 @@ function hydratePartWrite(input: Record<string, FormDataEntryValue>): PartsServi
     salePrice: toOptionalDecimal(parsed.salePrice ?? undefined),
     compatibleModels:
       parsed.compatibleModels?.trim() === "" ? undefined : parsed.compatibleModels?.trim(),
+    note: parsed.note?.trim() || undefined,
     markupRate: toOptionalDecimal(parsed.markupRate ?? undefined),
   };
 }

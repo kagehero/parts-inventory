@@ -12,6 +12,7 @@ export const partFormSchema = z.object({
   compatibleModels: z.union([z.string(), z.undefined()]).transform((s) =>
     s === undefined ? undefined : s.trim() === "" ? undefined : s.trim(),
   ),
+  note: zOptionalTrimmedEmptyToUndef,
   markupRate: zOptionalTrimmedEmptyToUndef,
 });
 
