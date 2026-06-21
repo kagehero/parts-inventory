@@ -26,6 +26,7 @@ export type PartWriteInput = {
   purchasePrice?: Prisma.Decimal | null;
   salePrice?: Prisma.Decimal | null;
   compatibleModels?: string;
+  note?: string;
   markupRate?: Prisma.Decimal | null;
 };
 

@@ -89,6 +89,8 @@ model Part {
   purchasePrice    Decimal?           @db.Decimal(12, 2)
   salePrice        Decimal?           @db.Decimal(12, 2)
   compatibleModels String?
+  /// 部品マスタの自由記入備考（使用型式の補足など）。検索・帳票には使用しない。
+  note             String?
   markupRate       Decimal?           @db.Decimal(6, 4)
   /// Cached sum of `inventory_logs.quantity`; updated only with receipt & usage transactions — not edited on the part form.
   currentQty       Int                @default(0)
