@@ -211,12 +211,24 @@ export async function sendOrderShareEmail(formData: FormData): Promise<ActionRes
     const printPath = `/print/orders/${parsed.orderId}`;
     const printUrl = origin ? `${origin}${printPath}` : printPath;
 
+    const attachments = await Promise.all(
+      order.attachments.map(async (att) => ({
+        filename: att.fileName,
+        content: await OrdersService.readOrderAttachmentBytes(att),
+      })),
+    );
+
+    const attachmentNote = attachments.length
+      ? `添付ファイル: ${order.attachments.map((a) => a.fileName).join(", ")}`
+      : "添付ファイル: なし";
+
     const text = [
       "注文書／見積文書の共有",
       "",
       `書類種別: ${orderDocumentTypeLabel[order.documentType]}`,
       `発注先: ${order.supplierName ?? "—"}`,
       `注文日: ${order.orderDate.toISOString().slice(0, 10)}`,
+      attachmentNote,
       "",
       "ブラウザで開き、印刷（またはPDF保存）できます:",
       printUrl,
@@ -229,6 +241,7 @@ export async function sendOrderShareEmail(formData: FormData): Promise<ActionRes
       to,
       subject: `【共有】${orderDocumentTypeLabel[order.documentType]}（${order.supplierName ?? "未記入"}）`,
       text,
+      attachments,
     });
 
     if (!sent.ok) throw new ActionError(sent.message);

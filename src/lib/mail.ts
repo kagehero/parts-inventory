@@ -1,3 +1,9 @@
+/** One file to attach to an outgoing email. `content` is the raw file bytes. */
+export type EmailAttachment = {
+  filename: string;
+  content: Buffer;
+};
+
 /**
  * Optional Resend integration. Set RESEND_API_KEY and MAIL_FROM in production.
  */
@@ -5,6 +11,7 @@ export async function sendPlainEmail(input: {
   to: string;
   subject: string;
   text: string;
+  attachments?: EmailAttachment[];
 }): Promise<{ ok: true } | { ok: false; message: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;
@@ -23,6 +30,14 @@ export async function sendPlainEmail(input: {
       to: [input.to],
       subject: input.subject,
       text: input.text,
+      ...(input.attachments?.length
+        ? {
+            attachments: input.attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content.toString("base64"),
+            })),
+          }
+        : {}),
     }),
   });
 

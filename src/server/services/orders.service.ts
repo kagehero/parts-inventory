@@ -1,3 +1,7 @@
+import path from "path";
+
+import { readFile } from "fs/promises";
+
 import type { OrderDocumentType, OrderLinePrintPartNoMode, Prisma } from "@prisma/client";
 
 import type { DbClient } from "@/server/db/types";
@@ -7,6 +11,7 @@ import { prisma, withReconnect } from "@/lib/db";
 import { ActionError } from "@/lib/server/action-guard";
 import { orderLineStatusFromQuantities, orderProgressStatus } from "@/lib/domain/inventory";
 import { sanitizeLineDetailInput } from "@/lib/orders/print-display";
+import { getUploadRoot } from "@/lib/storage/local";
 
 function composeOrderLineDetail(input: {
   lineMode: "MASTER" | "FREE_TEXT";
@@ -470,4 +475,25 @@ export async function createOrderAttachmentRecord(input: {
 
 export async function getOrderAttachmentById(id: string) {
   return prisma.orderAttachment.findUnique({ where: { id } });
+}
+
+type AttachmentSource = {
+  storageKind: "LOCAL" | "BLOB";
+  storageRef: string;
+  fileUrl: string;
+};
+
+/**
+ * Reads an attachment's raw bytes. BLOB files are fetched from their public URL;
+ * LOCAL files are read from the upload root on disk.
+ */
+export async function readOrderAttachmentBytes(att: AttachmentSource): Promise<Buffer> {
+  if (att.storageKind === "BLOB") {
+    const url = att.fileUrl.startsWith("https://") ? att.fileUrl : att.storageRef;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`添付ファイルの取得に失敗しました (${res.status})`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+  const abs = path.join(getUploadRoot(), att.storageRef);
+  return readFile(abs);
 }
