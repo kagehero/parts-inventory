@@ -31,8 +31,9 @@ export function OrderShareEmailPanel({
       }}
     >
       <input type="hidden" name="orderId" value={orderId} />
-      <p className="text-sm font-semibold">注文書URLをメールで共有</p>
+      <p className="text-sm font-semibold">注文書URL・資料をメールで共有</p>
       <p className="text-xs text-muted-foreground">
+        この注文にアップロード済みの資料ファイルは、メールに添付して送信されます。注文書は本文のリンクから印刷・PDF保存できます。
         Resend利用時は .env に RESEND_API_KEY と MAIL_FROM を設定してください。送信先は必須です（共有のたびに入力してください）。
       </p>
       <div className="space-y-1">
